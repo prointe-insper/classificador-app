@@ -1,0 +1,80 @@
+{
+  "balanced_accuracy": 0.9135620397918683,
+  "macro_f1": 0.7933964834814046,
+  "accuracy": 0.8085169870838484,
+  "train_seconds": 190.755690574646,
+  "per_class": {
+    "ICMS Declarado": {
+      "precision": 0.9911573472041613,
+      "recall": 0.9804476459994854,
+      "f1-score": 0.9857734092084842,
+      "support": 3887.0
+    },
+    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio e sexta-parte - Estatutários - Verbas genéricas": {
+      "precision": 0.41394230769230766,
+      "recall": 0.8184410646387833,
+      "f1-score": 0.5498084291187739,
+      "support": 1052.0
+    },
+    "Cumprimento individual de ação coletiva: 1001391-23.2014.8.26.0053 - Adicional de Local de Exercício ALE": {
+      "precision": 0.8770731707317073,
+      "recall": 0.9677072120559742,
+      "f1-score": 0.9201637666325486,
+      "support": 929.0
+    },
+    "Cumprimento Individual de Coletiva: 0017872-93.2005.8.26.0053 - Adicionais por Tempo de Serviço sobre vencimentos integrais": {
+      "precision": 0.9347345132743363,
+      "recall": 0.9802784222737819,
+      "f1-score": 0.956964892412231,
+      "support": 862.0
+    },
+    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - concessão ou pagamento": {
+      "precision": 0.737012987012987,
+      "recall": 0.9591549295774648,
+      "f1-score": 0.8335373317013464,
+      "support": 710.0
+    },
+    "Sistema Remuneratório: Verbas - Licença-prêmio em pecúnia indenizada": {
+      "precision": 0.396,
+      "recall": 0.8608695652173913,
+      "f1-score": 0.5424657534246575,
+      "support": 575.0
+    },
+    "Sistema Remuneratório: Verbas - Gratificação Especial de Suporte à Saúde GESS LC 1.157/11 - Agente de Segurança Penitenciária": {
+      "precision": 0.5063291139240507,
+      "recall": 0.9386281588447654,
+      "f1-score": 0.6578115117014548,
+      "support": 554.0
+    },
+    "ICMS Autuação": {
+      "precision": 0.8231292517006803,
+      "recall": 0.9718875502008032,
+      "f1-score": 0.8913443830570903,
+      "support": 498.0
+    },
+    "IPVA": {
+      "precision": 0.9776876267748479,
+      "recall": 0.9856850715746421,
+      "f1-score": 0.9816700610997964,
+      "support": 489.0
+    },
+    "Detran: Habilitação - Auto de Infração de Trânsito - AIT - Infração meramente administrativa - Sem Processo Administrativo de suspensão ou cassação": {
+      "precision": 0.5406976744186046,
+      "recall": 0.96875,
+      "f1-score": 0.6940298507462687,
+      "support": 480.0
+    },
+    "NÃO_NA_TAXONOMIA": {
+      "precision": 0.6067415730337079,
+      "recall": 0.84375,
+      "f1-score": 0.7058823529411765,
+      "support": 1280.0
+    },
+    "Outros": {
+      "precision": 0.960958194172521,
+      "recall": 0.687144857119328,
+      "f1-score": 0.801306059733026,
+      "support": 12143.0
+    }
+  }
+}

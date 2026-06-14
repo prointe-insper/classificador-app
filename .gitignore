@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Model artifacts (distribuídos via Releases / Hugging Face)
+backend/model/artifacts/*.joblib
+backend/model/artifacts/*.bin
+backend/model/_smoketest/
+backend/model/_probe/
+backend/model/_cache_dataset.pkl
+backend/model/_cache*
+hf_export/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+
+# Env / secrets
+.env
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

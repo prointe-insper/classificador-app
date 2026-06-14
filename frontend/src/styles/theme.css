@@ -1,0 +1,59 @@
+:root {
+  /* Brand */
+  --color-brand: #e4002b; /* Insper red */
+  --color-brand-dark: #b80023;
+  --color-brand-soft: rgba(228, 0, 43, 0.08);
+  --color-brand-softer: rgba(228, 0, 43, 0.14);
+
+  /* Secondary institutional blue (PGE feel) */
+  --color-secondary: #0a3d62;
+  --color-secondary-dark: #082d49;
+
+  /* Neutrals */
+  --color-text: #1a1a2e;
+  --color-text-muted: #5b5b6b;
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-border: #e3e5ea;
+  --color-border-strong: #cdd0d8;
+
+  /* Status */
+  --color-warning: #c77700;
+  --color-warning-bg: #fff7e8;
+  --color-warning-border: #f0c87a;
+  --color-success: #1f7a4d;
+  --color-error: #b3261e;
+  --color-error-bg: #fdecea;
+  --color-error-border: #f3b9b4;
+
+  /* Interpretability chips */
+  --color-chip-positive-bg: var(--color-brand-soft);
+  --color-chip-positive-text: var(--color-brand-dark);
+  --color-chip-positive-border: rgba(228, 0, 43, 0.35);
+  --color-chip-negative-bg: #eef1f5;
+  --color-chip-negative-text: #45506b;
+  --color-chip-negative-border: #d3d9e4;
+
+  /* Shape */
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(228, 0, 43, 0.25);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+}

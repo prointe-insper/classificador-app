@@ -1,0 +1,34 @@
+# Orquestração local do Classificador de Assuntos PGE-SP.
+#
+# Uso:
+#   1. Garanta que o modelo está em backend/model/artifacts/model.joblib
+#      (treine com o script de treino ou baixe das Releases / Hugging Face).
+#   2. docker compose up --build
+#   3. Acesse http://localhost:8080
+services:
+  backend:
+    build:
+      context: ./backend
+    image: classificador-app-backend
+    environment:
+      APP_MODEL_PATH: /app/model/artifacts/model.joblib
+      APP_DEFAULT_THRESHOLD: ${APP_DEFAULT_THRESHOLD:-0.5}
+      APP_OCR_ENABLED: ${APP_OCR_ENABLED:-true}
+      APP_OCR_LANGUAGE: ${APP_OCR_LANGUAGE:-por}
+      APP_CORS_ORIGINS: '["http://localhost:8080","http://localhost:5173"]'
+    volumes:
+      # Permite trocar o modelo sem rebuild da imagem.
+      - ./backend/model/artifacts:/app/model/artifacts:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    image: classificador-app-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+model/_smoketest
+model/_cache_dataset.pkl
+model/_cache*
+hf_export
+tests
+.git
+.env
