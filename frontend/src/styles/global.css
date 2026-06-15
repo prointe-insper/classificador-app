@@ -542,6 +542,7 @@ button {
 }
 
 .bar__fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
   background: var(--color-border-strong);
