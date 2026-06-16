@@ -14,6 +14,7 @@ const RESULT: PredictionResponse = {
   char_count: 1234,
   ocr_used: false,
   source: 'pdf',
+  model_id: 'pge-tfidf-xgboost-v1',
 };
 
 describe('ResultCard', () => {

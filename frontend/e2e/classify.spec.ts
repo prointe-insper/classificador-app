@@ -24,7 +24,10 @@ const PREDICTION = {
   char_count: 512,
   ocr_used: false,
   source: 'text',
+  model_id: 'pge-tfidf-xgboost-v1',
 };
+
+const LABELS = ['ICMS Declarado', 'IPVA', 'Outros Tributos Estaduais'];
 
 // Mock every backend route so the e2e is self-contained against the frontend.
 async function mockApi(page: Page) {
@@ -37,8 +40,22 @@ async function mockApi(page: Page) {
   await page.route('**/api/labels', (route) =>
     route.fulfill({
       contentType: 'application/json',
+      body: JSON.stringify({ labels: LABELS }),
+    }),
+  );
+  await page.route('**/api/models', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
       body: JSON.stringify({
-        labels: ['ICMS Declarado', 'IPVA', 'Outros Tributos Estaduais'],
+        models: [
+          {
+            id: 'pge-tfidf-xgboost-v1',
+            name: 'PGE · TF-IDF + XGBoost (v1)',
+            description: 'modelo padrão',
+            is_default: true,
+          },
+        ],
+        default_id: 'pge-tfidf-xgboost-v1',
       }),
     }),
   );
@@ -50,7 +67,7 @@ async function mockApi(page: Page) {
         target_column: 'assunto',
         n_documents: 5000,
         n_features: 2048,
-        label_names: ['ICMS Declarado', 'IPVA', 'Outros Tributos Estaduais'],
+        label_names: LABELS,
         class_distribution: {
           'ICMS Declarado': 2000,
           IPVA: 1500,
@@ -65,9 +82,22 @@ async function mockApi(page: Page) {
       body: JSON.stringify(PREDICTION),
     }),
   );
+  await page.route('**/api/export-xlsx', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      headers: {
+        'Content-Disposition':
+          'attachment; filename="classificacoes_20260616_120000.xlsx"',
+        'X-Filename': 'classificacoes_20260616_120000.xlsx',
+      },
+      body: 'PK fake-xlsx',
+    }),
+  );
 }
 
-test('happy path: classify, view results, then move threshold to trigger review', async ({
+test('batch flow: classify, review threshold, feedback and export', async ({
   page,
 }) => {
   await mockApi(page);
@@ -77,28 +107,25 @@ test('happy path: classify, view results, then move threshold to trigger review'
     page.getByRole('heading', { name: 'Classificador de Assuntos Jurídicos' }),
   ).toBeVisible();
 
-  // Upload the fixture file via the hidden input.
+  // Model selector is present and defaulted.
+  await expect(page.getByTestId('model-select')).toHaveValue(
+    'pge-tfidf-xgboost-v1',
+  );
+
+  // Upload the fixture file and classify.
   await page.locator('input[type="file"]').setInputFiles(FIXTURE);
-  await expect(page.getByText('peticao.txt')).toBeVisible();
+  await page.getByRole('button', { name: /Classificar/ }).click();
 
-  // Submit.
-  await page.getByRole('button', { name: 'Classificar' }).click();
+  // Results table renders one row with the predicted label.
+  const row = page.getByTestId('results-row');
+  await expect(row).toHaveCount(1);
+  await expect(row.getByText('ICMS Declarado')).toBeVisible();
 
-  // Decision card shows the predicted class (accept state).
-  const card = page.getByTestId('result-card');
-  await expect(card).toBeVisible();
-  await expect(card).toHaveAttribute('data-decision', 'accept');
-  await expect(card.getByText('ICMS Declarado').first()).toBeVisible();
+  // Review badge starts as "Não" (0.83 >= 0.5).
+  await expect(page.getByTestId('review-badge')).toHaveText('Não');
 
-  // Probability bars render (one per label).
-  await expect(page.getByTestId('prob-bar')).toHaveCount(3);
-
-  // Explanation chips render.
-  await expect(page.getByTestId('explanation-chip')).toHaveCount(3);
-
-  // Move the threshold above the confidence (0.83) -> "Revisar manualmente".
+  // Move the threshold above the confidence -> badge flips to "Sim".
   const slider = page.getByRole('slider');
-  // Set value directly and dispatch the input/change events React listens to.
   await slider.evaluate((el) => {
     const input = el as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(
@@ -109,7 +136,20 @@ test('happy path: classify, view results, then move threshold to trigger review'
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
+  await expect(page.getByTestId('review-badge')).toHaveText('Sim');
 
-  await expect(card).toHaveAttribute('data-decision', 'review');
-  await expect(page.getByText('Revisar manualmente')).toBeVisible();
+  // Expand details: probability bars and explanation chips appear.
+  await page.getByTestId('toggle-details').click();
+  await expect(page.getByTestId('prob-bar')).toHaveCount(3);
+  await expect(page.getByTestId('explanation-chip')).toHaveCount(3);
+
+  // Mark incorrect and pick the correct label.
+  await page.getByTestId('feedback-incorrect').check();
+  await page.getByTestId('feedback-correct-label').selectOption('IPVA');
+
+  // Export to Excel triggers a download with a timestamped filename.
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByTestId('export-button').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^classificacoes_.*\.xlsx$/);
 });

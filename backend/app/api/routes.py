@@ -2,21 +2,27 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 
 from app.config import Settings, get_settings
 from app.dependencies import get_model
 from app.schemas import (
+    ExportRequest,
     HealthResponse,
     LabelsResponse,
     ModelInfoResponse,
+    ModelsResponse,
     PredictionResponse,
 )
+from app.services.export import build_xlsx, export_filename
 from app.services.model import ModelNotLoadedError, ModelService
+from app.services.models import available_models, is_valid_model_id
 from app.services.ocr import ExtractionError
 from app.services.pipeline import run_pipeline
 
 router = APIRouter()
+
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 @router.get("/health", response_model=HealthResponse, tags=["infra"])
@@ -30,6 +36,14 @@ def labels(model: ModelService = Depends(get_model)) -> LabelsResponse:
     """Lista os rótulos suportados pelo modelo."""
     _require_model(model)
     return LabelsResponse(labels=model.label_names)
+
+
+@router.get("/models", response_model=ModelsResponse, tags=["modelo"])
+def models(settings: Settings = Depends(get_settings)) -> ModelsResponse:
+    """Lista os modelos disponíveis para seleção (hoje, um único)."""
+    options = available_models(settings)
+    default = next((m.id for m in options if m.is_default), options[0].id)
+    return ModelsResponse(models=options, default_id=default)
 
 
 @router.get("/model-info", response_model=ModelInfoResponse, tags=["modelo"])
@@ -53,6 +67,9 @@ async def predict(
     threshold: float | None = Form(
         default=None, description="Limiar de corte (0-1). Usa o padrão se omitido."
     ),
+    model_id: str | None = Form(
+        default=None, description="Id do modelo a usar. Usa o padrão se omitido."
+    ),
     model: ModelService = Depends(get_model),
     settings: Settings = Depends(get_settings),
 ) -> PredictionResponse:
@@ -64,6 +81,13 @@ async def predict(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="O limiar deve estar entre 0 e 1.",
+        )
+
+    used_model_id = settings.model_id if model_id in (None, "") else model_id
+    if not is_valid_model_id(settings, used_model_id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Modelo desconhecido: '{used_model_id}'.",
         )
 
     content = await file.read()
@@ -87,11 +111,32 @@ async def predict(
             ocr_enabled=settings.ocr_enabled,
             ocr_language=settings.ocr_language,
             explain_top_k=settings.explain_top_k,
+            model_id=used_model_id,
         )
     except ExtractionError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+
+
+@router.post("/export-xlsx", tags=["modelo"])
+def export_xlsx(payload: ExportRequest) -> Response:
+    """Gera uma planilha XLSX com as classificações e o feedback informado."""
+    if not payload.rows:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nada para exportar: a tabela está vazia.",
+        )
+    data = build_xlsx(payload.rows)
+    filename = export_filename()
+    return Response(
+        content=data,
+        media_type=XLSX_MEDIA_TYPE,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Filename": filename,
+        },
+    )
 
 
 def _require_model(model: ModelService) -> None:

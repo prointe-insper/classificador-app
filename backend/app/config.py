@@ -24,6 +24,14 @@ class Settings(BaseSettings):
         default=BACKEND_ROOT / "model" / "artifacts" / "model.joblib",
         description="Caminho para o artefato do modelo (.joblib).",
     )
+    model_id: str = Field(
+        default="pge-tfidf-xgboost-v1",
+        description="Identificador do modelo ativo (preparado para múltiplos modelos).",
+    )
+    model_name: str = Field(
+        default="PGE · TF-IDF + XGBoost (v1)",
+        description="Nome amigável do modelo ativo exibido no seletor.",
+    )
     default_threshold: float = Field(
         default=0.5,
         ge=0.0,

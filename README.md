@@ -16,8 +16,8 @@ e segue a abordagem `tfidf_xgboost` do pacote
 
 ## ✨ O que a ferramenta faz
 
-A partir de um arquivo enviado pelo usuário (TXT, PDF nativo, PDF escaneado ou
-imagem), o sistema:
+A partir de um ou mais arquivos enviados pelo usuário (TXT, PDF nativo, PDF
+escaneado ou imagem), o sistema:
 
 1. **Extrai o texto** (com OCR automático para PDFs escaneados/imagens);
 2. **Estrutura/limpa** o texto;
@@ -27,6 +27,22 @@ imagem), o sistema:
 5. Apresenta a **interpretabilidade** (termos mais influentes na decisão, via TreeSHAP);
 6. Aplica um **limiar de corte** configurável: abaixo dele, a peça é marcada
    como **"Revisar manualmente"**.
+
+### Classificação em lote, revisão e exportação
+
+- **Upload múltiplo:** envie vários documentos de uma vez; o modelo roda para
+  cada um, com **barra de progresso** (N de M).
+- **Tabela de resultados:** documento, rótulo predito, confiança e a marca de
+  *revisar manual* (recalculada ao vivo conforme o limiar). Cada linha pode ser
+  expandida para ver as probabilidades e a explicação (TreeSHAP).
+- **Feedback humano:** marque cada classificação como **correta** ou
+  **incorreta**; quando incorreta, escolha o **rótulo correto** num dropdown da
+  taxonomia. O feedback acompanha a exportação (base para retreino futuro).
+- **Exportar para Excel:** baixe um `.xlsx` com as classificações **e as colunas
+  de feedback**. O nome do arquivo carrega um **timestamp**
+  (`classificacoes_AAAAMMDD_HHMMSS.xlsx`), permitindo salvar vários históricos.
+- **Seletor de modelo:** a interface já traz um seletor de modelo (hoje com um
+  único modelo), preparado para múltiplas opções no futuro.
 
 ---
 
@@ -280,8 +296,8 @@ classificador-app/
 │   │   ├── config.py        # settings (APP_*)
 │   │   ├── schemas.py       # contratos Pydantic
 │   │   ├── dependencies.py  # singleton do modelo
-│   │   ├── api/routes.py    # /health /labels /model-info /predict
-│   │   └── services/        # ocr, preprocess, labels, model, explain, pipeline
+│   │   ├── api/routes.py    # /health /labels /models /model-info /predict /export-xlsx
+│   │   └── services/        # ocr, preprocess, labels, model, models, explain, pipeline, export
 │   ├── model/
 │   │   ├── training/train.py
 │   │   ├── download_model.py
@@ -290,7 +306,7 @@ classificador-app/
 │   └── tests/               # pytest
 └── frontend/                # React + Vite + TS
     ├── src/
-    │   ├── components/       # Upload, ResultCard, ProbabilityBars, Explanation, ...
+    │   ├── components/       # MultiFileUpload, ModelSelector, ProgressBar, ResultsTable, ResultCard, ProbabilityBars, Explanation, ...
     │   ├── api/client.ts
     │   └── styles/           # tema Insper/PGE
     ├── tests · src/**/*.test.tsx (vitest)

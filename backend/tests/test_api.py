@@ -91,3 +91,93 @@ def test_predict_rejects_unsupported_format(client):
         files={"file": ("planilha.xlsx", io.BytesIO(b"data"), "application/octet-stream")},
     )
     assert r.status_code == 422
+
+
+# --------------------------------------------------------------------- models
+
+
+def test_models_lists_default(client):
+    r = client.get("/api/models")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["models"]) >= 1
+    assert body["default_id"] == "pge-tfidf-xgboost-v1"
+    ids = [m["id"] for m in body["models"]]
+    assert body["default_id"] in ids
+    default = next(m for m in body["models"] if m["id"] == body["default_id"])
+    assert default["is_default"] is True
+    assert default["name"]
+
+
+def test_predict_echoes_model_id(client):
+    r = _upload(client, "icms declarado execucao fiscal divida ativa", threshold=0.0)
+    assert r.status_code == 200
+    assert r.json()["model_id"] == "pge-tfidf-xgboost-v1"
+
+
+def test_predict_accepts_explicit_model_id(client):
+    r = client.post(
+        "/api/predict",
+        files={"file": ("doc.txt", io.BytesIO(b"icms declarado"), "text/plain")},
+        data={"threshold": "0.0", "model_id": "pge-tfidf-xgboost-v1"},
+    )
+    assert r.status_code == 200
+    assert r.json()["model_id"] == "pge-tfidf-xgboost-v1"
+
+
+def test_predict_rejects_unknown_model_id(client):
+    r = client.post(
+        "/api/predict",
+        files={"file": ("doc.txt", io.BytesIO(b"icms declarado"), "text/plain")},
+        data={"threshold": "0.0", "model_id": "inexistente"},
+    )
+    assert r.status_code == 422
+
+
+# ---------------------------------------------------------------- export xlsx
+
+_XLSX_MAGIC = b"PK\x03\x04"  # zip header (.xlsx is a zip)
+
+
+def test_export_xlsx_returns_spreadsheet(client):
+    payload = {
+        "rows": [
+            {
+                "document": "peticao1.pdf",
+                "predicted_label": "ICMS Declarado",
+                "confidence": 0.91,
+                "threshold": 0.5,
+                "needs_manual_review": False,
+                "decision_label": "ICMS Declarado",
+                "source": "pdf",
+                "ocr_used": False,
+                "char_count": 1200,
+                "model_id": "pge-tfidf-xgboost-v1",
+                "feedback_status": "incorreto",
+                "correct_label": "Servidor",
+            },
+            {
+                "document": "peticao2.pdf",
+                "predicted_label": "Servidor",
+                "confidence": 0.4,
+                "threshold": 0.5,
+                "needs_manual_review": True,
+                "decision_label": "Revisar manualmente",
+            },
+        ]
+    }
+    r = client.post("/api/export-xlsx", json=payload)
+    assert r.status_code == 200
+    assert (
+        r.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    cd = r.headers["content-disposition"]
+    assert "attachment" in cd and ".xlsx" in cd
+    assert r.headers["x-filename"].startswith("classificacoes_")
+    assert r.content[:4] == _XLSX_MAGIC
+
+
+def test_export_xlsx_rejects_empty(client):
+    r = client.post("/api/export-xlsx", json={"rows": []})
+    assert r.status_code == 400

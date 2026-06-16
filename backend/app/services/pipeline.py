@@ -27,6 +27,7 @@ def run_pipeline(
     ocr_enabled: bool = True,
     ocr_language: str = "por",
     explain_top_k: int = 12,
+    model_id: str = "",
 ) -> PredictionResponse:
     """Executa o pipeline completo sobre o arquivo enviado."""
     extraction = extract_text(
@@ -63,6 +64,7 @@ def run_pipeline(
         char_count=len(text),
         ocr_used=extraction.ocr_used,
         source=extraction.source,
+        model_id=model_id,
     )
 
 
