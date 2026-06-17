@@ -60,14 +60,17 @@ button {
 .app__main {
   flex: 1;
   width: 100%;
-  max-width: 1040px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) 1fr;
+  /* minmax(0, 1fr): permite que a coluna encolha abaixo do min-content da
+     tabela (que tem colunas nowrap), evitando que ela "estoure" o layout para
+     a direita. A própria tabela rola horizontalmente via .results__scroll. */
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -117,7 +120,7 @@ button {
 }
 
 .header__inner {
-  max-width: 1040px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: var(--space-4) var(--space-5);
   display: flex;
@@ -162,7 +165,7 @@ button {
 }
 
 .footer__inner {
-  max-width: 1040px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: var(--space-4) var(--space-5);
   display: flex;

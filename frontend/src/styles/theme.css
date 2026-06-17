@@ -34,6 +34,12 @@
   --color-chip-negative-text: #45506b;
   --color-chip-negative-border: #d3d9e4;
 
+  /* Largura máxima do conteúdo (header, main e footer compartilham).
+     Larga o bastante para a tabela de resultados (13 colunas) caber sem
+     rolagem em monitores wide; em telas estreitas a tabela rola
+     horizontalmente dentro do próprio card. */
+  --content-max: 1600px;
+
   /* Shape */
   --radius: 8px;
   --radius-sm: 6px;
