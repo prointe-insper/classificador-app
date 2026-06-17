@@ -84,10 +84,26 @@ def _pdf_native_text(content: bytes) -> str:
     return "\f".join(parts)
 
 
+def _run_ocr(img, language: str) -> str:
+    """Aplica OCR numa imagem, traduzindo falhas do tesseract em ExtractionError."""
+    import pytesseract
+
+    try:
+        return pytesseract.image_to_string(img, lang=language)
+    except pytesseract.TesseractNotFoundError as exc:
+        raise ExtractionError(
+            "OCR indisponível: o tesseract não está instalado nesta máquina. "
+            "Documentos escaneados (sem texto nativo) e imagens exigem OCR — "
+            "rode a aplicação via Docker (já inclui tesseract e poppler) ou "
+            "instale o tesseract localmente."
+        ) from exc
+    except pytesseract.TesseractError as exc:  # falha de execução do tesseract
+        raise ExtractionError(f"Falha no OCR: {exc}.") from exc
+
+
 def _pdf_ocr(content: bytes, language: str) -> str:
     """Rasteriza o PDF e aplica OCR página a página."""
     try:
-        import pytesseract
         from pdf2image import convert_from_bytes
     except ImportError as exc:  # pragma: no cover - dependência opcional
         raise ExtractionError("Dependências de OCR não instaladas.") from exc
@@ -98,7 +114,7 @@ def _pdf_ocr(content: bytes, language: str) -> str:
         raise ExtractionError(
             "Não foi possível rasterizar o PDF (poppler ausente?)."
         ) from exc
-    parts = [pytesseract.image_to_string(img, lang=language) for img in images]
+    parts = [_run_ocr(img, language) for img in images]
     return "\f".join(parts)
 
 
@@ -114,7 +130,7 @@ def _extract_image(content: bytes, *, ocr_enabled: bool, ocr_language: str) -> E
         img = Image.open(io.BytesIO(content))
     except Exception as exc:
         raise ExtractionError("Arquivo de imagem inválido.") from exc
-    text = pytesseract.image_to_string(img, lang=ocr_language)
+    text = _run_ocr(img, ocr_language)
     return ExtractionResult(text, "image", True)
 
 
