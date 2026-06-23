@@ -1,5 +1,8 @@
 # Classificador de Assuntos Jurídicos — PGE-SP
 
+[![DOI](https://zenodo.org/badge/1269512938.svg)](https://zenodo.org/badge/latestdoi/1269512938)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Aplicativo **local** (Docker Compose) para classificação automática de assuntos
 de petições iniciais da **Procuradoria Geral do Estado de São Paulo (PGE-SP)**,
 desenvolvido com o **Insper** no âmbito do projeto FAPESP.
@@ -327,3 +330,28 @@ priorizando clareza e ausência de excessos.
 - Publicação do modelo no Hugging Face Hub.
 - Variante SBERT/transformer (juriclass) caso GPU local seja disponibilizada.
 - Classificação hierárquica (matéria → assunto) e multi-rótulo.
+
+---
+
+## 📚 Como citar
+
+Cada release publicada é arquivada no **Zenodo**, que gera um **DOI** permanente
+e citável. O badge no topo do README sempre aponta para a versão mais recente.
+
+Para citar, use os metadados do arquivo [`CITATION.cff`](CITATION.cff) (o GitHub
+exibe o botão "Cite this repository" a partir dele) ou a entrada do registro no
+Zenodo. Exemplo de citação:
+
+> Trecenti, Julio. *Classificador de Assuntos Jurídicos PGE-SP*. Insper, 2026.
+> Software disponível em https://github.com/prointe-insper/classificador-app
+> (DOI gerado pelo Zenodo na publicação da release).
+
+Após a primeira release arquivada, substitua a referência acima pelo DOI exato
+informado pelo Zenodo.
+
+---
+
+## 📄 Licença
+
+Distribuído sob a licença **MIT**. Veja o arquivo [`LICENSE`](LICENSE) para os
+termos completos.

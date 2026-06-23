@@ -1,0 +1,46 @@
+# PAGINA 001 de 001 -----------------------------------------
+
+                                                                                   Maria de Tal Exemplo
+                                                                                       OABSP nº 000.000
+___________________________________________________________________________________
+         AO JUÍZO DA VARA DO JUIZADO ESPECIAL DA FAZENDA PÚBLICA DE
+                                       CIDADE FICTÍCIA
+
+
+     PROCESSO Nº 0000000-00.0000.0.00.0000
+
+
+
+                  FULANO DE TAL (NOME FICTÍCIO), brasileiro, Agente de Segurança
+     Penitenciária, dados pessoais omitidos por se tratar de exemplo sintético, residente em
+     endereço fictício, por intermédio de sua advogada, regularmente constituída (procuração
+     anexa), vem, respeitosamente à presença de Vossa Excelência, requerer a instauração de
+     incidente de CUMPRIMENTO DE SENTENÇA em face da FAZENDA PÚBLICA DO ESTADO
+     DE SÃO PAULO, órgão público pessoa jurídica de direito público, pelos fatos e direitos a
+     seguir expostos, o que faz com fundamento no art. 536 do CPC.
+
+                                    DA OBRIGAÇÃO DE FAZER
+
+                Diante do reconhecimento do direito do autor ao recebimento da Gratificação
+     Especial de Suporte à Saúde (GESS), requer a Vossa Excelência que seja a EXECUTADA
+     intimada a dar cumprimento à obrigação de fazer determinando o apostilamento, para
+     posterior apresentação da planilha de débitos atualizada.
+
+                O presente pedido é instruído com cópia das seguintes peças processuais:
+     Procuração; Sentença; Acórdão; Certidão de trânsito em julgado.
+
+                Pede deferimento.
+
+                                                                 Cidade Fictícia, 01 de janeiro de 2025.
+
+                                        Maria de Tal Exemplo
+                                            OABSP 000000
+
+_____________________________________________________________________________________________
+
+
+# FIM DA PAGINA 001 de 001 ----------------------------------
+
+NOTA: documento meramente ilustrativo, com dados totalmente fictícios, criado
+apenas para demonstrar o pipeline de classificação. Não corresponde a nenhuma
+pessoa, processo ou peça real.

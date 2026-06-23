@@ -1,0 +1,25 @@
+{
+  "title": "Classificador de Assuntos Jurídicos PGE-SP",
+  "description": "Aplicativo local (Docker Compose) para classificação automática de assuntos de petições iniciais da Procuradoria Geral do Estado de São Paulo (PGE-SP), desenvolvido com o Insper no âmbito de projeto FAPESP. O sistema aplica OCR, um pipeline de estruturação de texto, predição com um modelo TF-IDF combinado com XGBoost ajustado à taxonomia revisada da PGE, e explicabilidade por TreeSHAP. Toda a solução roda inteiramente local, sem envio de dados para serviços externos, atendendo a requisitos de LGPD. A interface permite upload de arquivos (TXT, PDF nativo, PDF escaneado ou imagem), classificação em lote, ajuste de um limiar de corte para encaminhamento a revisão manual, feedback humano e exportação para Excel.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Trecenti, Julio",
+      "affiliation": "Insper"
+    }
+  ],
+  "keywords": [
+    "classificação de texto",
+    "jurídico",
+    "NLP",
+    "TF-IDF",
+    "XGBoost",
+    "explicabilidade",
+    "TreeSHAP",
+    "OCR",
+    "PGE-SP",
+    "LGPD"
+  ]
+}

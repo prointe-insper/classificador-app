@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "Se você usar este software, por favor cite-o usando os metadados abaixo."
+title: "Classificador de Assuntos Jurídicos PGE-SP"
+abstract: >-
+  Aplicativo local (Docker Compose) para classificação automática de assuntos de
+  petições iniciais da Procuradoria Geral do Estado de São Paulo (PGE-SP),
+  desenvolvido com o Insper no âmbito de projeto FAPESP. Usa OCR, um pipeline de
+  estruturação de texto, um modelo TF-IDF com XGBoost ajustado à taxonomia
+  revisada da PGE e explicabilidade por TreeSHAP. Toda a solução roda 100 por
+  cento local, sem envio de dados para serviços externos, atendendo a requisitos
+  de LGPD.
+type: software
+authors:
+  - family-names: Trecenti
+    given-names: Julio
+    affiliation: "Insper"
+version: 0.2.0
+date-released: "2026-06-17"
+license: MIT
+repository-code: "https://github.com/prointe-insper/classificador-app"
+url: "https://github.com/prointe-insper/classificador-app"
+keywords:
+  - classificação de texto
+  - jurídico
+  - NLP
+  - TF-IDF
+  - XGBoost
+  - explicabilidade
+  - TreeSHAP
+  - OCR
+  - PGE-SP
+  - LGPD
