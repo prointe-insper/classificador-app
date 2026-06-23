@@ -12,12 +12,12 @@ O modelo é ajustado à **taxonomia revisada** da PGE (do repositório
 e segue a abordagem `tfidf_xgboost` do pacote
 [juriclass](https://github.com/tiagoft/juriclass).
 
-> 🔒 **LGPD:** toda a solução roda **100% local**, sem dependência de nuvem.
+> **LGPD:** toda a solução roda **100% local**, sem dependência de nuvem.
 > Não há envio de dados para serviços externos.
 
 ---
 
-## ✨ O que a ferramenta faz
+## O que a ferramenta faz
 
 A partir de um ou mais arquivos enviados pelo usuário (TXT, PDF nativo, PDF
 escaneado ou imagem), o sistema:
@@ -49,11 +49,11 @@ escaneado ou imagem), o sistema:
 
 ---
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ```mermaid
 flowchart LR
-    U[👤 Usuário] -->|upload TXT/PDF/imagem| FE[Frontend React + Vite\nnginx]
+    U[Usuário] -->|upload TXT/PDF/imagem| FE[Frontend React + Vite\nnginx]
     FE -->|POST /api/predict\nmultipart| BE[Backend FastAPI]
     subgraph BE[Backend FastAPI]
         direction TB
@@ -95,7 +95,7 @@ sequenceDiagram
 
 ---
 
-## 🚀 Como rodar localmente
+## Como rodar localmente
 
 ### Pré-requisitos
 - [Docker](https://docs.docker.com/get-docker/) + Docker Compose.
@@ -142,7 +142,7 @@ npm run dev        # http://localhost:5173 (proxy /api → :8000)
 
 ---
 
-## 🧠 O modelo
+## O modelo
 
 | Item | Valor |
 | --- | --- |
@@ -218,7 +218,7 @@ cinza = contra), dimensionados pela magnitude.
 
 ---
 
-## 🎓 Treino do modelo
+## Treino do modelo
 
 O treino lê o `analitico_pge_revisado.parquet` e os textos das petições do
 repositório `classificador-assuntos` (que deve estar clonado ao lado deste).
@@ -257,7 +257,7 @@ flowchart TD
 
 ---
 
-## 📦 Distribuição do modelo (Releases / Hugging Face)
+## Distribuição do modelo (Releases / Hugging Face)
 
 O binário do modelo **não é versionado no git**. Ele é publicado nas **Releases**
 do repositório e, futuramente, no **Hugging Face Hub**.
@@ -273,7 +273,7 @@ huggingface-cli upload prointe-insper/classificador-assuntos-pge hf_export .
 
 ---
 
-## 🧪 Testes
+## Testes
 
 ```bash
 # Backend (pytest)
@@ -288,7 +288,7 @@ cd frontend && npx playwright install chromium && npm run e2e
 
 ---
 
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 classificador-app/
@@ -318,7 +318,7 @@ classificador-app/
 
 ---
 
-## 🎨 Identidade visual
+## Identidade visual
 
 Estilo institucional, limpo e objetivo, alinhado ao **manual de marca do Insper**
 (vermelho `#E4002B`) e ao tom institucional da **PGE-SP** (azul `#0a3d62`),
@@ -326,14 +326,14 @@ priorizando clareza e ausência de excessos.
 
 ---
 
-## 🔭 Evolução futura
+## Evolução futura
 - Publicação do modelo no Hugging Face Hub.
 - Variante SBERT/transformer (juriclass) caso GPU local seja disponibilizada.
 - Classificação hierárquica (matéria → assunto) e multi-rótulo.
 
 ---
 
-## 📚 Como citar
+## Como citar
 
 Cada release publicada é arquivada no **Zenodo**, que gera um **DOI** permanente
 e citável. O badge no topo do README sempre aponta para a versão mais recente.
@@ -353,7 +353,7 @@ Zenodo (por exemplo, a v0.2.1 tem o DOI 10.5281/zenodo.20815007).
 
 ---
 
-## 📄 Licença
+## Licença
 
 Distribuído sob a licença **MIT**. Veja o arquivo [`LICENSE`](LICENSE) para os
 termos completos.
