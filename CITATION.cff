@@ -14,8 +14,8 @@ authors:
   - family-names: Trecenti
     given-names: Julio
     affiliation: "Insper"
-version: 0.2.0
-date-released: "2026-06-17"
+version: 0.2.1
+date-released: "2026-06-23"
 license: MIT
 repository-code: "https://github.com/prointe-insper/classificador-app"
 url: "https://github.com/prointe-insper/classificador-app"
