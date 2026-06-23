@@ -338,16 +338,18 @@ priorizando clareza e ausência de excessos.
 Cada release publicada é arquivada no **Zenodo**, que gera um **DOI** permanente
 e citável. O badge no topo do README sempre aponta para a versão mais recente.
 
+- **DOI conceitual** (sempre a versão mais recente): [10.5281/zenodo.20815006](https://doi.org/10.5281/zenodo.20815006)
+- **Registro no Zenodo**: https://zenodo.org/records/20815006
+
 Para citar, use os metadados do arquivo [`CITATION.cff`](CITATION.cff) (o GitHub
 exibe o botão "Cite this repository" a partir dele) ou a entrada do registro no
 Zenodo. Exemplo de citação:
 
 > Trecenti, Julio. *Classificador de Assuntos Jurídicos PGE-SP*. Insper, 2026.
-> Software disponível em https://github.com/prointe-insper/classificador-app
-> (DOI gerado pelo Zenodo na publicação da release).
+> https://doi.org/10.5281/zenodo.20815006
 
-Após a primeira release arquivada, substitua a referência acima pelo DOI exato
-informado pelo Zenodo.
+Para citar uma versão específica, use o DOI daquela versão informado na página do
+Zenodo (por exemplo, a v0.2.1 tem o DOI 10.5281/zenodo.20815007).
 
 ---
 

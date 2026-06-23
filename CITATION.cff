@@ -14,6 +14,14 @@ authors:
   - family-names: Trecenti
     given-names: Julio
     affiliation: "Insper"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20815006"
+    description: "DOI conceitual (sempre aponta para a versão mais recente)"
+  - type: doi
+    value: "10.5281/zenodo.20815007"
+    description: "DOI da versão 0.2.1"
+doi: "10.5281/zenodo.20815006"
 version: 0.2.1
 date-released: "2026-06-23"
 license: MIT
