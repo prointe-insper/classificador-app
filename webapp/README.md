@@ -131,11 +131,24 @@ E tem estas restrições próprias:
 - **Depende de navegador atual.** Usa WebAssembly e `File.stream()`; Chrome,
   Edge ou Firefox recentes. Não foi testada em navegador antigo de rede
   corporativa, que é justamente o cenário da PGE-SP.
-- **PDF pode dar resultado ligeiramente diferente do app principal.** A
-  classificação é a mesma para um mesmo texto, mas o texto sai de extratores
-  diferentes: aqui é o `pdf.js`, lá é o `pdfplumber`. Para `.txt` os dois
-  chegam ao mesmo resultado; para PDF a confiança pode variar na casa decimal, e
-  um PDF que aqui cai no OCR pode ter camada de texto aproveitável lá.
+- **Em PDF, o resultado pode diferir do app principal.** A inferência é
+  equivalente, mas o texto vem de extratores diferentes: `pdf.js` aqui,
+  `pdfplumber` lá. Medido sobre 60 PDFs reais com camada de texto (o `pdf.js`
+  extrai 5,7% mais caracteres):
+
+  | | mesma classe | mesma decisão (limiar 50%) | maior diferença de confiança |
+  | --- | --- | --- | --- |
+  | v2 | 58/60 (96,7%) | **60/60** | 0,020 |
+  | v1 | 60/60 (100%) | **60/60** | 0,049 |
+
+  Os dois casos em que a classe divergiu no v2 tinham confiança de 0,155 e 0,30,
+  ou seja, empate técnico entre classes que os dois lados mandam para revisão
+  manual de qualquer forma. Alimentados com o **mesmo texto**, os dois chegam à
+  mesma classe em 80/80, com diferença de probabilidade de 0 no v2 e 2,1e-7 no
+  v1: a divergência acima é do extrator, não do classificador.
+
+  Um PDF que aqui cai no OCR pode ter camada de texto aproveitável lá, e
+  vice-versa.
 
 ## Aviso
 
