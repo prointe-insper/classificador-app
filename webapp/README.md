@@ -88,15 +88,39 @@ uv run python -m model.export_web --out ../webapp/public/model-web.json
 
 ## Limitações
 
-- **OCR é lento.** Reconhecer uma página leva alguns segundos, contra
-  milissegundos de um PDF com camada de texto. A interface mostra o andamento
-  página a página.
-- **O modelo do OCR vem da rede.** O `tesseract.js` baixa o runtime e o modelo
-  de português na primeira digitalização (alguns MB, do CDN). O documento
+Comparada ao app principal (Docker), esta versão **não tem**:
+
+- **Seletor de modelo.** Serve um modelo só, o da v0.3.0. Não é uma perda em
+  relação ao app principal: lá o seletor existe na tela mas também tem uma
+  opção só, e fica desabilitado. Servir dois modelos aqui seria até mais fácil
+  (é outro JSON), mas o modelo antigo é XGBoost, cuja árvore tem estrutura e
+  agregação diferentes das do Random Forest; `forest.ts` teria que ganhar um
+  segundo interpretador.
+- **Marcação de correto/incorreto na tabela.** As colunas de revisão e o campo
+  de rótulo correto existem só no app principal. Sem elas, esta versão não
+  serve para coletar o gabarito humano do experimento.
+- **Exportação em Excel.** A saída é CSV (separador `;`, com BOM, abre no Excel
+  sem passo intermediário), não `.xlsx`.
+
+E tem estas restrições próprias:
+
+- **OCR é lento.** Alguns segundos por página, contra milissegundos de um PDF
+  com camada de texto. A interface mostra o andamento página a página.
+- **O runtime do OCR vem da rede.** O `tesseract.js` baixa o runtime e o modelo
+  de português na primeira digitalização (alguns MB, de CDN). O documento
   continua sem sair da máquina, mas essa parte específica não funciona offline
-  no primeiro uso.
-- **Sem Excel.** A exportação é CSV (separador `;`, com BOM, abre no Excel).
-- **Sem revisão manual na tabela.** As colunas de correto/incorreto existem só
-  no app principal.
-- **Lote grande cansa a aba.** A classificação é rápida, mas a extração de texto
-  de centenas de PDFs no navegador é sequencial e mantém tudo em memória.
+  no primeiro uso. O resto (modelo do classificador, pdf.js e seus WASM) é
+  servido pelo próprio site e fica em cache.
+- **Lote grande cansa a aba.** A classificação em si é instantânea, mas a
+  extração de texto é sequencial e os arquivos ficam em memória. Dezenas a
+  poucas centenas de peças, sim; milhares, não.
+- **Sem persistência.** Fechou a aba, perdeu os resultados. Baixe o CSV antes.
+- **Depende de navegador atual.** Usa WebAssembly e `File.stream()`; Chrome,
+  Edge ou Firefox recentes. Não foi testada em navegador antigo de rede
+  corporativa, que é justamente o cenário da PGE-SP.
+
+## Aviso
+
+Branch experimental, publicada para avaliação. A entrega oficial para a PGE-SP
+é o app local com Docker Compose, na `main`, que é o que está descrito nas
+releases e no e-mail à Procuradoria.
