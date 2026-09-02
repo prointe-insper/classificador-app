@@ -46,7 +46,9 @@ export function Explanation({ explanation }: ExplanationProps) {
             direção a favor ou contra a classe.
           </>
         )}{' '}
-        O tamanho reflete a importância (peso absoluto).
+        O número é a influência do termo <strong>relativa ao termo mais
+        influente</strong> do documento, e o tamanho acompanha essa mesma
+        proporção.
       </p>
 
       <div className="chips">
@@ -59,30 +61,31 @@ export function Explanation({ explanation }: ExplanationProps) {
               key={`${item.token}-${index}`}
               className={`chip ${positive ? 'chip--positive' : 'chip--negative'}`}
               style={{ fontSize: `${fontSize.toFixed(3)}rem` }}
-              title={`peso ${item.weight >= 0 ? '+' : ''}${item.weight.toFixed(3)}`}
+              title={`peso bruto ${item.weight >= 0 ? '+' : ''}${item.weight.toExponential(2)}`}
               data-testid="explanation-chip"
               data-sign={positive ? 'positive' : 'negative'}
             >
               {item.token}
               <span className="chip__weight">
-                {item.weight >= 0 ? '+' : ''}
-                {item.weight.toFixed(2)}
+                {Math.round(ratio * 100)}%
               </span>
             </span>
           );
         })}
       </div>
 
-      <div className="chips__legend">
-        <span className="chips__legend-item">
-          <span className="chips__swatch chips__swatch--positive" aria-hidden="true" />
-          A favor da classe
-        </span>
-        <span className="chips__legend-item">
-          <span className="chips__swatch chips__swatch--negative" aria-hidden="true" />
-          Contra a classe
-        </span>
-      </div>
+      {hasNegative ? (
+        <div className="chips__legend">
+          <span className="chips__legend-item">
+            <span className="chips__swatch chips__swatch--positive" aria-hidden="true" />
+            A favor da classe
+          </span>
+          <span className="chips__legend-item">
+            <span className="chips__swatch chips__swatch--negative" aria-hidden="true" />
+            Contra a classe
+          </span>
+        </div>
+      ) : null}
     </section>
   );
 }

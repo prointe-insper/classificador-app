@@ -18,9 +18,14 @@ export function Footer({ modelInfo }: FooterProps) {
               Modelo: <strong>{modelInfo.model_type}</strong>
             </span>
             <span>{modelInfo.label_names.length} classes</span>
-            <span>
-              {modelInfo.n_documents.toLocaleString('pt-BR')} documentos
-            </span>
+            {/* Nem todo bundle traz o tamanho do corpus de treino (o do
+                juriclass, por exemplo, não traz): melhor omitir a informação
+                que exibir "0 documentos". */}
+            {modelInfo.n_documents > 0 ? (
+              <span>
+                {modelInfo.n_documents.toLocaleString('pt-BR')} documentos
+              </span>
+            ) : null}
             <span>
               {modelInfo.n_features.toLocaleString('pt-BR')} atributos
             </span>
