@@ -1,7 +1,7 @@
 {
   "name": "classificador-assuntos-frontend",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "Frontend do Classificador de Assuntos Jurídicos — PGE-SP / Insper",
   "scripts": {
