@@ -27,9 +27,19 @@ frontend/test-results/
 # Env / secrets
 .env
 *.local
+credenciais*.json
+
+# Dados da avaliação (gabarito da PGE + petições): nunca versionar
+data/
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+
+# E-mails da PGE (contêm anexos com dados de processos): nunca versionar
+contexto/
+
+# Minutas de e-mail para a PGE (contem enderecos e dados de contato): nunca versionar
+email.md

@@ -102,3 +102,73 @@ def client(tiny_model_path: Path, monkeypatch):
 
     dependencies.reset_model()
     config.get_settings.cache_clear()
+
+
+def _build_tiny_chunked_model(path: Path) -> None:
+    """Modelo de brinquedo no formato do ``juriclass``: chunks + TF-IDF + RandomForest.
+
+    Serve para exercitar o caminho de inferência com ``chunking``/``preprocess:
+    raw``/``explanation: tfidf_x_importances`` sem depender do artefato real.
+    """
+    import numpy as np
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    from app.services.model import chunk_text
+
+    label_names = ["ICMS Declarado", "Servidor", "Outros"]
+    label_to_idx = {l: i for i, l in enumerate(label_names)}
+
+    # Documentos longos o bastante para gerar mais de um chunk.
+    docs = [(" ".join([t] * 30), l) for t, l in _SAMPLES]
+
+    chunk_texts: list[str] = []
+    for text, _ in docs:
+        chunk_texts.extend(chunk_text(text, 100, 50))
+    vectorizer = TfidfVectorizer(min_df=1)
+    vectorizer.fit(chunk_texts)
+
+    X = np.vstack(
+        [vectorizer.transform(chunk_text(t, 100, 50)).toarray().mean(axis=0) for t, _ in docs]
+    )
+    y = [label_to_idx[l] for _, l in docs]
+    clf = RandomForestClassifier(n_estimators=25, random_state=0)
+    clf.fit(X, y)
+
+    metadata = {
+        "model_type": "fixed_chunks+tfidf+random_forest",
+        "target_column": "PGE_ASSUNTOS_REVISADA",
+        "label_names": label_names,
+        "n_features": int(X.shape[1]),
+        "chunking": {
+            "strategy": "fixed",
+            "chunk_words": 100,
+            "overlap": 50,
+            "aggregation": "mean",
+        },
+        "preprocess": "raw",
+        "explanation": "tfidf_x_importances",
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(
+        {"vectorizer": vectorizer, "clf": clf, "label_names": label_names, "metadata": metadata},
+        path,
+    )
+
+
+@pytest.fixture(scope="session")
+def tiny_chunked_model_path(tmp_path_factory) -> Path:
+    """Caminho para um artefato de brinquedo no formato chunk + RandomForest."""
+    path = tmp_path_factory.mktemp("model_chunked") / "model.joblib"
+    _build_tiny_chunked_model(path)
+    return path
+
+
+@pytest.fixture
+def chunked_model_service(tiny_chunked_model_path: Path):
+    """ModelService carregado com o modelo de brinquedo chunkado."""
+    from app.services.model import ModelService
+
+    svc = ModelService(tiny_chunked_model_path)
+    svc.load()
+    return svc

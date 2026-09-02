@@ -1,13 +1,23 @@
-"""Explicabilidade via TreeSHAP sobre o modelo XGBoost em espaço TF-IDF.
+"""Explicabilidade dos termos que pesaram na decisão do classificador.
 
-Para a classe escolhida, calculamos os valores SHAP (contribuição exata de cada
-feature) e mapeamos as *features* (uni/bi-gramas) de volta aos termos presentes
-no documento. Retornamos os termos com maior contribuição absoluta — é a
-"interpretabilidade" exibida no frontend (trechos/termos que pesaram na decisão).
+Há dois métodos, escolhidos pela chave ``explanation`` do bundle:
 
-TreeSHAP é exato e rápido para modelos de árvore (ao contrário do LIME, que é
-amostral/aproximado). Mantemos um *fallback* para o ``pred_contribs`` nativo do
-XGBoost caso o ``shap`` não esteja disponível em algum ambiente.
+``shap`` (padrão, modelos XGBoost)
+    TreeSHAP sobre a classe prevista: contribuição exata de cada feature,
+    com sinal (empurra a favor ou contra a classe). Mantemos um *fallback*
+    para o ``pred_contribs`` nativo do XGBoost quando o ``shap`` não está
+    disponível no ambiente.
+
+``tfidf_x_importances`` (modelos RandomForest)
+    Peso TF-IDF do documento × importância global do RandomForest. É a mesma
+    aproximação usada no ``juriclass-webapp``, e é uma aproximação mesmo: mede
+    "o documento tem esse termo" combinado com "esse termo importa para o
+    modelo em geral", não a contribuição para a classe prevista. TreeSHAP numa
+    floresta de 200 árvores sobre 5.000 features é caro demais para o tempo de
+    resposta de um upload.
+
+Em ambos os casos devolvemos os termos com maior contribuição absoluta entre os
+que ocorrem no documento.
 """
 
 from __future__ import annotations
@@ -16,12 +26,30 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from app.services.model import ModelService
+from app.services.model import ModelService, to_dense
+
+# Conectivos que sobrevivem ao TF-IDF do juriclass (que filtra por frequência,
+# não por stopword) e dominariam o destaque por aparecerem dezenas de vezes num
+# documento real. Lista fixa, espelhada do juriclass-webapp para que os termos
+# destacados sejam os mesmos nos dois lugares.
+_PORTUGUESE_STOPWORDS = {
+    "a", "à", "às", "ao", "aos", "aquela", "aquelas", "aquele", "aqueles", "aquilo",
+    "as", "até", "com", "como", "da", "das", "de", "dela", "delas", "dele", "deles",
+    "depois", "do", "dos", "e", "é", "ela", "elas", "ele", "eles", "em", "entre",
+    "era", "essa", "essas", "esse", "esses", "esta", "está", "estas", "este",
+    "estes", "eu", "foi", "for", "isso", "isto", "já", "lhe", "lhes", "mais",
+    "mas", "me", "mesmo", "meu", "meus", "minha", "minhas", "muito", "na", "não",
+    "nas", "nem", "no", "nos", "nós", "nossa", "nossas", "nosso", "nossos", "num",
+    "numa", "o", "os", "ou", "para", "pela", "pelas", "pelo", "pelos", "por",
+    "qual", "quando", "que", "quem", "se", "sem", "seu", "seus", "só", "sua",
+    "suas", "também", "te", "tu", "tua", "tuas", "um", "uma", "você", "vocês",
+    "vos",
+}
 
 
 @dataclass
 class TokenContribution:
-    """Contribuição de um termo para a classe prevista."""
+    """Contribuição de um termo para a decisão."""
 
     token: str
     weight: float
@@ -34,20 +62,30 @@ def explain(
     *,
     top_k: int = 12,
 ) -> list[TokenContribution]:
-    """Retorna os ``top_k`` termos mais influentes para ``predicted_label``."""
-    features = model.transform(text)
-    nz = features.nonzero()[1]
+    """Retorna os ``top_k`` termos mais influentes do documento."""
+    dense = to_dense(model.transform(text))
+    nz = dense.nonzero()[1]
     if nz.size == 0:
         return []
 
-    class_idx = model.label_names.index(predicted_label)
     feature_names = model.vectorizer.get_feature_names_out()
 
-    contribs = _shap_contributions(model, features, class_idx)
-    if contribs is None:
-        return []
+    if model.explanation_method == "tfidf_x_importances":
+        contribs = _importance_contributions(model, dense)
+        if contribs is None:
+            return []
+        scored = [
+            (int(j), float(contribs[j]))
+            for j in nz
+            if str(feature_names[j]).lower() not in _PORTUGUESE_STOPWORDS
+        ]
+    else:
+        class_idx = model.label_names.index(predicted_label)
+        contribs = _shap_contributions(model, dense, class_idx)
+        if contribs is None:
+            return []
+        scored = [(int(j), float(contribs[j])) for j in nz]
 
-    scored = [(int(j), float(contribs[j])) for j in nz]
     scored.sort(key=lambda kv: abs(kv[1]), reverse=True)
 
     out: list[TokenContribution] = []
@@ -58,9 +96,16 @@ def explain(
     return out
 
 
-def _shap_contributions(model: ModelService, features, class_idx: int) -> np.ndarray | None:
+def _importance_contributions(model: ModelService, dense: np.ndarray) -> np.ndarray | None:
+    """Peso TF-IDF do documento × importância global do estimador."""
+    importances = getattr(model.clf, "feature_importances_", None)
+    if importances is None:
+        return None
+    return np.asarray(dense)[0] * np.asarray(importances)
+
+
+def _shap_contributions(model: ModelService, dense: np.ndarray, class_idx: int) -> np.ndarray | None:
     """Vetor de contribuições SHAP por feature para a classe ``class_idx``."""
-    dense = features.toarray()
     try:
         import shap
 

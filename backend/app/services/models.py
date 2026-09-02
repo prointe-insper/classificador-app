@@ -1,6 +1,6 @@
 """Catálogo de modelos disponíveis.
 
-Hoje há um único modelo (TF-IDF + XGBoost treinado nos dados da PGE-SP), mas a
+Hoje há um único modelo ativo (o vencedor do benchmark do ``juriclass``), mas a
 API já expõe uma *lista* para que o frontend ofereça um seletor preparado para
 múltiplos modelos no futuro (ex.: variações de taxonomia ou de algoritmo).
 """
@@ -18,8 +18,9 @@ def available_models(settings: Settings) -> list[ModelOption]:
             id=settings.model_id,
             name=settings.model_name,
             description=(
-                "Classificador de assuntos (TF-IDF 1-2 gramas + XGBoost) treinado "
-                "na base rotulada da PGE-SP, com a taxonomia revisada."
+                "Classificador de assuntos (chunks de 100 palavras + TF-IDF + "
+                "Random Forest) treinado na base rotulada da PGE-SP. Vencedor do "
+                "benchmark do juriclass, com 16 assuntos da taxonomia revisada."
             ),
             is_default=True,
         ),

@@ -22,16 +22,31 @@ export function Explanation({ explanation }: ExplanationProps) {
     (a, b) => Math.abs(b.weight) - Math.abs(a.weight),
   );
 
+  // Só os métodos com sinal (TreeSHAP) produzem peso negativo. O modelo atual
+  // usa peso TF-IDF x importância do Random Forest, sempre >= 0: nesse caso não
+  // faz sentido falar de termos "contra" a classe.
+  const hasNegative = explanation.some((item) => item.weight < 0);
+
   return (
     <section className="card" aria-labelledby="explanation-title">
       <h2 className="card__title" id="explanation-title">
-        Termos mais influentes (TreeSHAP)
+        Termos mais influentes
       </h2>
       <p className="card__caption">
-        Estes são os termos que mais influenciaram a decisão do modelo. Termos em
-        vermelho empurram o documento <strong>em direção</strong> à classe
-        prevista; termos em cinza empurram no sentido contrário. O tamanho reflete
-        a importância (peso absoluto).
+        Estes são os termos que mais influenciaram a decisão do modelo.{' '}
+        {hasNegative ? (
+          <>
+            Termos em vermelho empurram o documento <strong>em direção</strong> à
+            classe prevista; termos em cinza empurram no sentido contrário.
+          </>
+        ) : (
+          <>
+            O peso combina a frequência do termo no documento com a importância
+            dele para o modelo, então mede <strong>influência</strong>, não
+            direção a favor ou contra a classe.
+          </>
+        )}{' '}
+        O tamanho reflete a importância (peso absoluto).
       </p>
 
       <div className="chips">
