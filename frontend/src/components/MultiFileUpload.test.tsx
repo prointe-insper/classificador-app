@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
+import { strToU8, zipSync } from 'fflate';
 import { MultiFileUpload } from './MultiFileUpload';
 
 // lastModified fixo para que "o mesmo arquivo" seja realmente idêntico
@@ -10,8 +11,23 @@ function makeFile(name: string) {
   return new File(['x'], name, { type: 'text/plain', lastModified: 1700000000000 });
 }
 
+function makeZip(entries: Record<string, string>, name = 'lote.zip') {
+  const zipped = zipSync(
+    Object.fromEntries(
+      Object.entries(entries).map(([path, content]) => [path, strToU8(content)]),
+    ),
+  );
+  return new File([new Blob([zipped])], name, { lastModified: 1700000000000 });
+}
+
 /** Wrapper que mantém o estado dos arquivos como o App faria. */
-function Harness({ onSubmit = () => {} }: { onSubmit?: () => void }) {
+function Harness({
+  onSubmit = () => {},
+  onError,
+}: {
+  onSubmit?: () => void;
+  onError?: (message: string) => void;
+}) {
   const [files, setFiles] = useState<File[]>([]);
   return (
     <MultiFileUpload
@@ -19,6 +35,7 @@ function Harness({ onSubmit = () => {} }: { onSubmit?: () => void }) {
       onFilesChange={setFiles}
       onSubmit={onSubmit}
       loading={false}
+      onError={onError}
     />
   );
 }
@@ -73,5 +90,56 @@ describe('MultiFileUpload', () => {
     await user.upload(input(container), makeFile('a.pdf'));
     await user.click(screen.getByRole('button', { name: 'Classificar' }));
     expect(onSubmit).toHaveBeenCalled();
+  });
+});
+
+describe('MultiFileUpload com zip', () => {
+  it('substitui o zip pelos documentos que ele contém', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, makeZip({ 'a.pdf': 'aa', 'sub/b.pdf': 'bb' }));
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('upload-item')).toHaveLength(2);
+    });
+    const nomes = screen
+      .getAllByTestId('upload-item')
+      .map((li) => li.textContent ?? '');
+    expect(nomes.some((t) => t.includes('a.pdf'))).toBe(true);
+    expect(nomes.some((t) => t.includes('b.pdf'))).toBe(true);
+    // O próprio zip não fica na lista.
+    expect(nomes.some((t) => t.includes('lote.zip'))).toBe(false);
+  });
+
+  it('avisa quantos arquivos do zip foram ignorados', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, makeZip({ 'a.pdf': 'aa', 'nota.xlsx': 'xx' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('zip-skipped')).toHaveTextContent(
+        /1 arquivo do zip foi ignorado/,
+      );
+    });
+  });
+
+  it('reporta erro quando o zip não tem documento suportado', async () => {
+    const user = userEvent.setup();
+    const onError = vi.fn();
+    render(<Harness onError={onError} />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, makeZip({ 'nota.xlsx': 'xx' }));
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.stringContaining('nenhum documento em formato suportado'),
+      );
+    });
+    expect(screen.queryAllByTestId('upload-item')).toHaveLength(0);
   });
 });

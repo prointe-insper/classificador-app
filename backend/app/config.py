@@ -38,7 +38,14 @@ class Settings(BaseSettings):
         le=1.0,
         description="Limiar padrão de confiança para decidir 'revisar manualmente'.",
     )
-    max_upload_mb: int = Field(default=25, description="Tamanho máximo de upload em MB.")
+    max_upload_mb: int = Field(
+        default=1024,
+        description=(
+            "Tamanho máximo de upload em MB, por documento. O teto é alto para "
+            "comportar lotes grandes: o zip é aberto no navegador e cada documento "
+            "chega aqui numa requisição própria."
+        ),
+    )
     ocr_enabled: bool = Field(
         default=True,
         description="Habilita OCR de PDFs escaneados/imagens (requer tesseract+poppler).",

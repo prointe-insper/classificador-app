@@ -264,6 +264,12 @@ button {
   color: var(--color-text-muted);
 }
 
+.upload__status {
+  margin: var(--space-3) 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 .upload__file {
   margin-top: var(--space-4);
   display: flex;

@@ -30,6 +30,21 @@ escaneado ou imagem), o sistema:
 6. Aplica um **limiar de corte** configurável: abaixo dele, a peça é marcada
    como **"Revisar manualmente"**.
 
+### Lote por zip
+
+Além de selecionar vários arquivos de uma vez, dá para enviar um **`.zip` com o
+lote inteiro** (até 1 GB). O zip é aberto no próprio navegador: as pastas
+internas são achatadas, entradas em formato não suportado são contadas e
+ignoradas, e cada documento segue pelo mesmo fluxo dos arquivos soltos, com
+barra de progresso, tabela de revisão e exportação para Excel.
+
+Como o zip não trafega pela rede, o limite do backend (`APP_MAX_UPLOAD_MB`,
+1 GB por padrão) vale por documento, e não pelo lote.
+
+> Escala: a classificação leva cerca de **1,2 s por petição** (PDF com camada de
+> texto, sem OCR) numa máquina comum. Um lote de 500 peças roda em ~10 minutos
+> com a aba aberta. Para volumes muito maiores, vale processar fora do navegador.
+
 ### Classificação em lote, revisão e exportação
 
 - **Upload múltiplo:** envie vários documentos de uma vez; o modelo roda para

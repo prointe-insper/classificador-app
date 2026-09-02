@@ -195,6 +195,7 @@ export default function App() {
               onFilesChange={handleFilesChange}
               onSubmit={handleSubmit}
               loading={running}
+              onError={setError}
             />
             <ThresholdControl value={threshold} onChange={setThreshold} />
           </div>
