@@ -11,6 +11,7 @@ htmlcov/
 # Model artifacts (distribuídos via Releases / Hugging Face)
 backend/model/artifacts/*.joblib
 backend/model/artifacts/*.bin
+backend/model/artifacts_xgb_v1/*.joblib
 backend/model/_smoketest/
 backend/model/_probe/
 backend/model/_cache_dataset.pkl

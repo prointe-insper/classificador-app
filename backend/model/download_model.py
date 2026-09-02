@@ -1,11 +1,22 @@
-"""Baixa o artefato do modelo de uma Release do GitHub (ou Hugging Face).
+"""Baixa os artefatos dos modelos das Releases do GitHub (ou do Hugging Face).
 
-O modelo (``model.joblib``) não é versionado no git por ser binário/grande; ele
-é distribuído via *Releases* do repositório e, futuramente, via Hugging Face.
+Os ``model.joblib`` não são versionados no git por serem binários grandes; eles
+são distribuídos via *Releases* do repositório e, futuramente, via Hugging Face.
+
+O app serve **dois** modelos ao mesmo tempo, com taxonomias diferentes, e o
+usuário escolhe na tela: a v2 (16 assuntos da cauda) e a v1 (dez assuntos de
+massa mais ``Outros``). Faltando o artefato de um deles, ele apenas não aparece
+no seletor.
 
 Uso::
 
-    # Da Release do GitHub (informe a URL do asset):
+    # Os dois modelos, cada um no caminho padrão:
+    uv run python -m model.download_model --modelo todos
+
+    # Só um deles:
+    uv run python -m model.download_model --modelo v2
+
+    # URL específica (por exemplo, uma release antiga):
     uv run python -m model.download_model --url https://github.com/prointe-insper/classificador-app/releases/download/v0.1.0/model.joblib
 
     # Do Hugging Face (quando publicado):
@@ -42,15 +53,40 @@ def download_hf(repo_id: str, dest_dir: Path) -> Path:
     return Path(path)
 
 
+REPO = "prointe-insper/classificador-app"
+
+#: Modelos que o app serve, com a release de onde sai cada artefato. A aplicação
+#: usa os dois ao mesmo tempo: são taxonomias distintas, não gerações que se
+#: substituem (ver ``app/services/models.py``).
+MODELOS = {
+    "v2": ("v0.3.1", ARTIFACTS_DIR / "model.joblib"),
+    "v1": ("v0.2.1", ARTIFACTS_DIR.parent / "artifacts_xgb_v1" / "model.joblib"),
+}
+
+
+def release_url(tag: str) -> str:
+    return f"https://github.com/{REPO}/releases/download/{tag}/model.joblib"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--modelo",
+        choices=[*MODELOS, "todos"],
+        help="Baixa um modelo do catálogo (ou 'todos') no caminho padrão dele.",
+    )
     group.add_argument("--url", help="URL direta do asset model.joblib.")
     group.add_argument("--hf", help="repo_id no Hugging Face (ex.: org/modelo).")
     parser.add_argument("--dest", type=Path, default=ARTIFACTS_DIR / "model.joblib")
     args = parser.parse_args()
 
-    if args.url:
+    if args.modelo:
+        escolhidos = MODELOS if args.modelo == "todos" else {args.modelo: MODELOS[args.modelo]}
+        for nome, (tag, destino) in escolhidos.items():
+            print(f"[{nome}] release {tag}")
+            download_url(release_url(tag), destino)
+    elif args.url:
         download_url(args.url, args.dest)
     else:
         download_hf(args.hf, args.dest.parent)

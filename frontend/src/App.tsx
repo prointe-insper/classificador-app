@@ -59,17 +59,6 @@ export default function App() {
       }
 
       try {
-        const info = await getModelInfo();
-        if (!cancelled) {
-          setModelInfo(info);
-        }
-      } catch (err) {
-        if (!cancelled && err instanceof ApiError && err.status === 503) {
-          setModelNotLoaded(true);
-        }
-      }
-
-      try {
         const list = await getModels();
         if (!cancelled) {
           setModels(list.models);
@@ -85,6 +74,32 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  // Rótulos e metadados são por modelo (a v1 tem 12 classes, a v2 tem 16, sem
+  // interseção), então trocar de modelo tem que recarregá-los: a tabela de
+  // revisão usa essa lista para o campo "rótulo correto".
+  useEffect(() => {
+    let cancelled = false;
+
+    async function carregarInfo() {
+      try {
+        const info = await getModelInfo(selectedModelId || undefined);
+        if (!cancelled) {
+          setModelInfo(info);
+          setModelNotLoaded(false);
+        }
+      } catch (err) {
+        if (!cancelled && err instanceof ApiError && err.status === 503) {
+          setModelNotLoaded(true);
+        }
+      }
+    }
+
+    void carregarInfo();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedModelId]);
 
   function handleFilesChange(next: File[]) {
     setFiles(next);
@@ -196,6 +211,7 @@ export default function App() {
               onSubmit={handleSubmit}
               loading={running}
               onError={setError}
+              progress={{ done: progress.done, total: progress.total }}
             />
             <ThresholdControl value={threshold} onChange={setThreshold} />
           </div>

@@ -24,13 +24,17 @@ class Settings(BaseSettings):
         default=BACKEND_ROOT / "model" / "artifacts" / "model.joblib",
         description="Caminho para o artefato do modelo (.joblib).",
     )
+    legacy_model_path: Path = Field(
+        default=BACKEND_ROOT / "model" / "artifacts_xgb_v1" / "model.joblib",
+        description=(
+            "Caminho do artefato do modelo v1 (TF-IDF + XGBoost, dez assuntos de "
+            "massa). Se o arquivo não existir, o modelo simplesmente não aparece no "
+            "seletor."
+        ),
+    )
     model_id: str = Field(
         default="pge-fixedchunks-tfidf-rf-v2",
-        description="Identificador do modelo ativo (preparado para múltiplos modelos).",
-    )
-    model_name: str = Field(
-        default="PGE · TF-IDF + Random Forest (v2)",
-        description="Nome amigável do modelo ativo exibido no seletor.",
+        description="Identificador do modelo pré-selecionado no seletor.",
     )
     default_threshold: float = Field(
         default=0.5,

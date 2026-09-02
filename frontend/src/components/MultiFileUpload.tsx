@@ -12,6 +12,8 @@ interface MultiFileUploadProps {
   loading: boolean;
   /** Reporta falha ao abrir um zip (corrompido ou acima do limite). */
   onError?: (message: string) => void;
+  /** Andamento do lote, para mostrar o progresso junto do botão. */
+  progress?: { done: number; total: number };
 }
 
 /** Chave estável para deduplicar/identificar um arquivo na lista. */
@@ -25,6 +27,7 @@ export function MultiFileUpload({
   onSubmit,
   loading,
   onError,
+  progress,
 }: MultiFileUploadProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -220,13 +223,33 @@ export function MultiFileUpload({
           {loading ? (
             <>
               <span className="btn__spinner" aria-hidden="true" />
-              Classificando…
+              {progress && progress.total > 0
+                ? `Classificando ${progress.done} de ${progress.total}…`
+                : 'Classificando…'}
             </>
           ) : (
             submitLabel
           )}
         </button>
       </div>
+
+      {/* O progresso também aparece aqui, e não só na coluna de resultados: é
+          onde o usuário acabou de clicar e para onde ele olha enquanto espera. */}
+      {loading && progress && progress.total > 1 ? (
+        <div
+          className="progress__track upload__progress"
+          role="progressbar"
+          aria-label="Progresso da classificação"
+          aria-valuenow={progress.done}
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+        >
+          <div
+            className="progress__fill"
+            style={{ width: `${(progress.done / progress.total) * 100}%` }}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }
