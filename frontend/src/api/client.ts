@@ -44,14 +44,23 @@ export async function getHealth(): Promise<HealthResponse> {
 }
 
 /** GET /api/labels */
-export async function getLabels(): Promise<LabelsResponse> {
-  const response = await fetch(`${BASE_PATH}/labels`);
+export async function getLabels(modelId?: string): Promise<LabelsResponse> {
+  const response = await fetch(`${BASE_PATH}/labels${modelQuery(modelId)}`);
   return parseJson<LabelsResponse>(response);
 }
 
+/**
+ * Query string do modelo. Rótulos e metadados são por modelo (a v1 tem 12
+ * classes, a v2 tem 16, sem interseção), então quem pergunta precisa dizer
+ * sobre qual.
+ */
+function modelQuery(modelId?: string): string {
+  return modelId ? `?model_id=${encodeURIComponent(modelId)}` : '';
+}
+
 /** GET /api/model-info */
-export async function getModelInfo(): Promise<ModelInfoResponse> {
-  const response = await fetch(`${BASE_PATH}/model-info`);
+export async function getModelInfo(modelId?: string): Promise<ModelInfoResponse> {
+  const response = await fetch(`${BASE_PATH}/model-info${modelQuery(modelId)}`);
   return parseJson<ModelInfoResponse>(response);
 }
 

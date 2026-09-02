@@ -1,0 +1,50 @@
+{
+  "model_type": "tfidf+xgboost",
+  "target_column": "PGE_ASSUNTOS_REVISADA",
+  "label_names": [
+    "ICMS Declarado",
+    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio e sexta-parte - Estatutários - Verbas genéricas",
+    "Cumprimento individual de ação coletiva: 1001391-23.2014.8.26.0053 - Adicional de Local de Exercício ALE",
+    "Cumprimento Individual de Coletiva: 0017872-93.2005.8.26.0053 - Adicionais por Tempo de Serviço sobre vencimentos integrais",
+    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - concessão ou pagamento",
+    "Sistema Remuneratório: Verbas - Licença-prêmio em pecúnia indenizada",
+    "Sistema Remuneratório: Verbas - Gratificação Especial de Suporte à Saúde GESS LC 1.157/11 - Agente de Segurança Penitenciária",
+    "ICMS Autuação",
+    "IPVA",
+    "Detran: Habilitação - Auto de Infração de Trânsito - AIT - Infração meramente administrativa - Sem Processo Administrativo de suspensão ou cassação",
+    "NÃO_NA_TAXONOMIA",
+    "Outros"
+  ],
+  "top_n": 10,
+  "other_label": "Outros",
+  "nao_taxonomia_label": "NÃO_NA_TAXONOMIA",
+  "n_documents": 117291,
+  "n_train": 31223,
+  "n_test": 23459,
+  "max_per_class": 3000,
+  "n_features": 8000,
+  "tfidf": {
+    "max_features": 8000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 20,
+    "max_df": 0.7,
+    "sublinear_tf": true
+  },
+  "class_distribution": {
+    "ICMS Declarado": 19436,
+    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio e sexta-parte - Estatutários - Verbas genéricas": 5260,
+    "Cumprimento individual de ação coletiva: 1001391-23.2014.8.26.0053 - Adicional de Local de Exercício ALE": 4644,
+    "Cumprimento Individual de Coletiva: 0017872-93.2005.8.26.0053 - Adicionais por Tempo de Serviço sobre vencimentos integrais": 4309,
+    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - concessão ou pagamento": 3549,
+    "Sistema Remuneratório: Verbas - Licença-prêmio em pecúnia indenizada": 2876,
+    "Sistema Remuneratório: Verbas - Gratificação Especial de Suporte à Saúde GESS LC 1.157/11 - Agente de Segurança Penitenciária": 2767,
+    "ICMS Autuação": 2489,
+    "IPVA": 2446,
+    "Detran: Habilitação - Auto de Infração de Trânsito - AIT - Infração meramente administrativa - Sem Processo Administrativo de suspensão ou cassação": 2402,
+    "NÃO_NA_TAXONOMIA": 6399,
+    "Outros": 60714
+  }
+}

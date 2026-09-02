@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
 
 from app.config import Settings, get_settings
-from app.dependencies import get_model
+from app.dependencies import get_model, get_model_by_id
 from app.schemas import (
     ExportRequest,
     HealthResponse,
@@ -16,7 +26,7 @@ from app.schemas import (
 )
 from app.services.export import build_xlsx, export_filename
 from app.services.model import ModelNotLoadedError, ModelService
-from app.services.models import available_models, is_valid_model_id
+from app.services.models import available_models, default_model_id, is_valid_model_id
 from app.services.ocr import ExtractionError
 from app.services.pipeline import run_pipeline
 
@@ -32,23 +42,36 @@ def health(model: ModelService = Depends(get_model)) -> HealthResponse:
 
 
 @router.get("/labels", response_model=LabelsResponse, tags=["modelo"])
-def labels(model: ModelService = Depends(get_model)) -> LabelsResponse:
-    """Lista os rótulos suportados pelo modelo."""
+def labels(
+    model_id: str | None = Query(default=None, description="Modelo a consultar."),
+    settings: Settings = Depends(get_settings),
+) -> LabelsResponse:
+    """Lista os rótulos suportados pelo modelo escolhido.
+
+    Os rótulos são por modelo, não da aplicação: a v1 tem 12 e a v2 tem 16, sem
+    interseção. A tela de revisão precisa dos rótulos do modelo que classificou.
+    """
+    model = _model_for(settings, model_id)
     _require_model(model)
     return LabelsResponse(labels=model.label_names)
 
 
 @router.get("/models", response_model=ModelsResponse, tags=["modelo"])
 def models(settings: Settings = Depends(get_settings)) -> ModelsResponse:
-    """Lista os modelos disponíveis para seleção (hoje, um único)."""
-    options = available_models(settings)
-    default = next((m.id for m in options if m.is_default), options[0].id)
-    return ModelsResponse(models=options, default_id=default)
+    """Lista os modelos disponíveis para seleção."""
+    return ModelsResponse(
+        models=available_models(settings),
+        default_id=default_model_id(settings),
+    )
 
 
 @router.get("/model-info", response_model=ModelInfoResponse, tags=["modelo"])
-def model_info(model: ModelService = Depends(get_model)) -> ModelInfoResponse:
-    """Retorna metadados do modelo carregado."""
+def model_info(
+    model_id: str | None = Query(default=None, description="Modelo a consultar."),
+    settings: Settings = Depends(get_settings),
+) -> ModelInfoResponse:
+    """Retorna metadados do modelo escolhido."""
+    model = _model_for(settings, model_id)
     _require_model(model)
     meta = model.metadata
     return ModelInfoResponse(
@@ -70,12 +93,9 @@ async def predict(
     model_id: str | None = Form(
         default=None, description="Id do modelo a usar. Usa o padrão se omitido."
     ),
-    model: ModelService = Depends(get_model),
     settings: Settings = Depends(get_settings),
 ) -> PredictionResponse:
     """Classifica o documento enviado e retorna classe, probabilidades e explicação."""
-    _require_model(model)
-
     used_threshold = settings.default_threshold if threshold is None else threshold
     if not 0.0 <= used_threshold <= 1.0:
         raise HTTPException(
@@ -83,12 +103,9 @@ async def predict(
             detail="O limiar deve estar entre 0 e 1.",
         )
 
-    used_model_id = settings.model_id if model_id in (None, "") else model_id
-    if not is_valid_model_id(settings, used_model_id):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Modelo desconhecido: '{used_model_id}'.",
-        )
+    used_model_id = default_model_id(settings) if model_id in (None, "") else model_id
+    model = _model_for(settings, used_model_id)
+    _require_model(model)
 
     content = await file.read()
     max_bytes = settings.max_upload_mb * 1024 * 1024
@@ -137,6 +154,24 @@ def export_xlsx(payload: ExportRequest) -> Response:
             "X-Filename": filename,
         },
     )
+
+
+def _model_for(settings: Settings, model_id: str | None) -> ModelService:
+    """Serviço do modelo pedido, ou o padrão quando o id vem vazio.
+
+    Id desconhecido é 422 e não 404: do ponto de vista da API, o cliente mandou
+    um valor inválido num campo, e a mensagem lista o que existe para facilitar a
+    correção.
+    """
+    if model_id in (None, ""):
+        return get_model_by_id(None)
+    if not is_valid_model_id(settings, str(model_id)):
+        disponiveis = ", ".join(m.id for m in available_models(settings))
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Modelo desconhecido: '{model_id}'. Disponíveis: {disponiveis}.",
+        )
+    return get_model_by_id(str(model_id))
 
 
 def _require_model(model: ModelService) -> None:

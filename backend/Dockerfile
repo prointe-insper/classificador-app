@@ -24,6 +24,7 @@ COPY model ./model
 
 ENV PATH="/app/.venv/bin:$PATH" \
     APP_MODEL_PATH=/app/model/artifacts/model.joblib \
+    APP_LEGACY_MODEL_PATH=/app/model/artifacts_xgb_v1/model.joblib \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8000

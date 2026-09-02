@@ -81,12 +81,21 @@ def model_service(tiny_model_path: Path):
     return svc
 
 
+def tmp_path_factory_inexistente() -> Path:
+    """Caminho garantidamente ausente, para desligar um modelo do catálogo."""
+    return Path(__file__).resolve().parent / "_sem_artefato" / "model.joblib"
+
+
 @pytest.fixture
 def client(tiny_model_path: Path, monkeypatch):
     """TestClient da API com o modelo de brinquedo carregado."""
     from fastapi.testclient import TestClient
 
     monkeypatch.setenv("APP_MODEL_PATH", str(tiny_model_path))
+    # Aponta o modelo legado para um caminho inexistente: sem isso o teste
+    # enxergaria o artefato real da máquina de quem roda a suíte, e o catálogo
+    # mudaria de tamanho conforme o disco.
+    monkeypatch.setenv("APP_LEGACY_MODEL_PATH", str(tmp_path_factory_inexistente()))
 
     # Recria settings e singleton do modelo para pegar o env novo.
     from app import config, dependencies
@@ -172,3 +181,29 @@ def chunked_model_service(tiny_chunked_model_path: Path):
     svc = ModelService(tiny_chunked_model_path)
     svc.load()
     return svc
+
+
+@pytest.fixture
+def client_dois_modelos(tiny_model_path: Path, tiny_chunked_model_path: Path, monkeypatch):
+    """TestClient com os dois modelos do catálogo disponíveis.
+
+    O padrão (v2) recebe o modelo chunkado e o legado (v1) recebe o de brinquedo
+    XGBoost, que é o mais próximo do artefato real de cada um.
+    """
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("APP_MODEL_PATH", str(tiny_chunked_model_path))
+    monkeypatch.setenv("APP_LEGACY_MODEL_PATH", str(tiny_model_path))
+
+    from app import config, dependencies
+
+    config.get_settings.cache_clear()
+    dependencies.reset_model()
+
+    from app.main import create_app
+
+    with TestClient(create_app()) as c:
+        yield c
+
+    dependencies.reset_model()
+    config.get_settings.cache_clear()
