@@ -27,15 +27,18 @@ TensorFlow.js) só somaria megabytes de download e uma dependência a mais para
 acelerar algo que já é instantâneo. WebGPU seria ainda menos útil: floresta de
 decisão é percurso de ponteiros, não multiplicação de matrizes.
 
-WebAssembly entra onde ele de fato paga: o `pdf.js`, que faz a extração de texto
-dos PDFs. Se um dia for preciso OCR de digitalização, o `tesseract.js` (também
-WASM) é o caminho natural.
+WebAssembly entra onde ele de fato paga, e aí paga muito: o `pdf.js` extrai o
+texto dos PDFs e o `tesseract.js` faz o **OCR** das digitalizações. Esse é o
+trabalho pesado de verdade nesta aplicação, e ele é WASM de ponta a ponta.
 
 ## O que roda aqui
 
 O pipeline é o mesmo do backend, reimplementado em TypeScript:
 
-1. `utils/pdf.ts` extrai a camada de texto do PDF (pdf.js) ou lê o `.txt`.
+1. `utils/pdf.ts` extrai a camada de texto do PDF (pdf.js); quando ela não
+   existe ou é curta demais (< 200 caracteres, ou seja, carimbo em vez de
+   petição), renderiza cada página num canvas e passa o `tesseract.js`. Imagens
+   soltas vão direto para o OCR.
 2. `model/tfidf.ts` quebra o texto em chunks de 100 palavras com sobreposição
    de 50, vetoriza cada chunk em TF-IDF e tira a média dos vetores.
 3. `model/forest.ts` percorre as 200 árvores e faz a média das distribuições.
@@ -85,7 +88,13 @@ uv run python -m model.export_web --out ../webapp/public/model-web.json
 
 ## Limitações
 
-- **Sem OCR.** PDF que é só imagem digitalizada não é lido; a interface avisa.
+- **OCR é lento.** Reconhecer uma página leva alguns segundos, contra
+  milissegundos de um PDF com camada de texto. A interface mostra o andamento
+  página a página.
+- **O modelo do OCR vem da rede.** O `tesseract.js` baixa o runtime e o modelo
+  de português na primeira digitalização (alguns MB, do CDN). O documento
+  continua sem sair da máquina, mas essa parte específica não funciona offline
+  no primeiro uso.
 - **Sem Excel.** A exportação é CSV (separador `;`, com BOM, abre no Excel).
 - **Sem revisão manual na tabela.** As colunas de correto/incorreto existem só
   no app principal.

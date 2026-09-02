@@ -53,6 +53,7 @@ export function App() {
   const [progresso, setProgresso] = useState({ feitos: 0, total: 0 });
   const [limiar, setLimiar] = useState(THRESHOLD_PADRAO);
   const [aberta, setAberta] = useState<number | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export function App() {
     const saida: Linha[] = [];
     for (const arquivo of arquivos) {
       try {
-        const texto = await extractText(arquivo);
+        const texto = await extractText(arquivo, setStatus);
         saida.push({ nome: arquivo.name, resultado: predict(texto, model) });
       } catch (e) {
         saida.push({
@@ -98,11 +99,13 @@ export function App() {
           erro: e instanceof Error ? e.message : 'Falha ao ler o arquivo.',
         });
       }
+      setStatus(null);
       setLinhas([...saida]);
       setProgresso({ feitos: saida.length, total: arquivos.length });
       // Devolve o controle ao navegador para a barra de progresso andar.
       await new Promise((r) => setTimeout(r, 0));
     }
+    setStatus(null);
     setRodando(false);
   }
 
@@ -133,8 +136,10 @@ export function App() {
                 não há servidor nem upload. Funciona offline depois do primeiro acesso.
               </p>
               <p className="card__caption">
-                Lê PDF com camada de texto e arquivos <code>.txt</code>. Esta versão não
-                faz OCR de digitalização.
+                Lê <code>.txt</code>, PDF e imagem. PDF digitalizado, sem camada de
+                texto, passa por <strong>OCR no próprio navegador</strong> (tesseract em
+                WebAssembly). O modelo de português do OCR é baixado na primeira vez que
+                for necessário; o documento continua sem sair daqui.
               </p>
             </section>
 
@@ -161,14 +166,16 @@ export function App() {
                 <span>
                   Arraste os arquivos aqui ou <strong>clique para selecionar</strong>
                 </span>
-                <span className="upload__hint">TXT, PDF ou um .zip com o lote</span>
+                <span className="upload__hint">
+                  TXT, PDF, imagem ou um .zip com o lote
+                </span>
               </div>
               <input
                 ref={inputRef}
                 type="file"
                 multiple
                 className="visually-hidden"
-                accept=".txt,.pdf,.zip"
+                accept=".txt,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.zip"
                 disabled={!model || rodando}
                 onChange={(e) => {
                   void classificar(e.target.files);
@@ -180,7 +187,7 @@ export function App() {
               ) : null}
               {rodando ? (
                 <p className="upload__status" role="status">
-                  Classificando {progresso.feitos} de {progresso.total}...
+                  {status ?? `Classificando ${progresso.feitos} de ${progresso.total}...`}
                 </p>
               ) : null}
             </section>
