@@ -3,6 +3,24 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
+/**
+ * Assets que o pdf.js carrega sob demanda e que precisam ser servidos junto.
+ *
+ * Sem `wasmUrl` o pdf.js não decodifica imagens **JBIG2** nem JPEG 2000: ele
+ * apenas avisa no console ("JBig2 failed to initialize") e devolve a página em
+ * branco, sem erro. Digitalização antiga de tribunal costuma ser exatamente
+ * JBIG2, então a página em branco chegava ao OCR e o tesseract, corretamente,
+ * não achava texto nenhum. Os cmaps e as fontes padrão resolvem o mesmo tipo de
+ * problema na camada de texto de PDFs com codificação CJK ou sem fonte
+ * embutida.
+ */
+const PDFJS_ASSETS = {
+  wasmUrl: `${import.meta.env.BASE_URL}pdfjs/wasm/`,
+  cMapUrl: `${import.meta.env.BASE_URL}pdfjs/cmaps/`,
+  cMapPacked: true,
+  standardFontDataUrl: `${import.meta.env.BASE_URL}pdfjs/standard_fonts/`,
+};
+
 /** Idioma do OCR. O tesseract baixa o modelo correspondente sob demanda. */
 const OCR_LANG = 'por';
 
@@ -13,14 +31,29 @@ const OCR_LANG = 'por';
  */
 const MIN_CHARS_TEXTO = 200;
 
-/** Escala de renderização para o OCR: ~150 dpi, suficiente para texto jurídico. */
-const OCR_SCALE = 2;
+/**
+ * DPI de rasterização para o OCR. O PDF tem 72 pontos por polegada, então a
+ * escala é `OCR_DPI / 72`.
+ *
+ * 300 dpi não é capricho: as digitalizações antigas do acervo são fax CCITT de
+ * 1 bit, já em torno de 300 dpi. Rasterizar a 144 dpi jogava fora metade da
+ * informação de uma imagem que já é só preto e branco, e o tesseract passava a
+ * devolver texto vazio em vez de texto ruim.
+ */
+const OCR_DPI = 300;
+
+/**
+ * Teto de pixels por página. Acima de ~50 MP o canvas estoura o limite de
+ * alguns navegadores e a renderização volta em branco, sem erro; nesse caso é
+ * melhor reduzir a resolução do que perder a página inteira.
+ */
+const OCR_MAX_PIXELS = 40_000_000;
 
 export type StatusCallback = (mensagem: string) => void;
 
 /** Texto embutido no PDF, quando existe. */
 async function textoNativo(data: Uint8Array): Promise<string> {
-  const doc = await pdfjs.getDocument({ data }).promise;
+  const doc = await pdfjs.getDocument({ data, ...PDFJS_ASSETS }).promise;
   try {
     const paginas: string[] = [];
     for (let i = 1; i <= doc.numPages; i += 1) {
@@ -32,6 +65,17 @@ async function textoNativo(data: Uint8Array): Promise<string> {
   } finally {
     await doc.cleanup();
   }
+}
+
+/** Escala que aproxima OCR_DPI sem estourar o teto de pixels do canvas. */
+function escalaPara(page: pdfjs.PDFPageProxy): number {
+  const base = page.getViewport({ scale: 1 });
+  const desejada = OCR_DPI / 72;
+  const pixels = base.width * base.height * desejada * desejada;
+  if (pixels <= OCR_MAX_PIXELS) {
+    return desejada;
+  }
+  return Math.sqrt(OCR_MAX_PIXELS / (base.width * base.height));
 }
 
 /**
@@ -51,20 +95,24 @@ async function ocrPdf(
   onStatus?.(`${nome}: preparando o OCR (na primeira vez baixa o modelo de português)...`);
   const worker = await createWorker(OCR_LANG);
 
-  const doc = await pdfjs.getDocument({ data }).promise;
+  const doc = await pdfjs.getDocument({ data, ...PDFJS_ASSETS }).promise;
   try {
     const paginas: string[] = [];
     for (let i = 1; i <= doc.numPages; i += 1) {
       onStatus?.(`${nome}: OCR da página ${i} de ${doc.numPages}...`);
       const page = await doc.getPage(i);
-      const viewport = page.getViewport({ scale: OCR_SCALE });
+      const viewport = page.getViewport({ scale: escalaPara(page) });
       const canvas = document.createElement('canvas');
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
       if (!context) {
         throw new Error('O navegador não permitiu renderizar a página para OCR.');
       }
+      // Fundo branco: o canvas nasce transparente, e o tesseract lê o
+      // transparente como preto, o que apaga o texto de uma digitalização.
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvas, canvasContext: context, viewport }).promise;
       const { data: resultado } = await worker.recognize(canvas);
       paginas.push(resultado.text);
