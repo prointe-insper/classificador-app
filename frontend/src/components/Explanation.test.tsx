@@ -27,9 +27,16 @@ describe('Explanation', () => {
     expect(negative?.getAttribute('data-sign')).toBe('negative');
   });
 
-  it('mentions TreeSHAP in the caption', () => {
+  it('explains the sign when there are negative weights', () => {
     render(<Explanation explanation={TOKENS} />);
-    expect(screen.getByText(/TreeSHAP/i)).toBeInTheDocument();
+    expect(screen.getByText(/sentido contrário/i)).toBeInTheDocument();
+  });
+
+  it('omits the sign explanation when every weight is positive', () => {
+    const positives = TOKENS.map((t) => ({ ...t, weight: Math.abs(t.weight) }));
+    render(<Explanation explanation={positives} />);
+    expect(screen.queryByText(/sentido contrário/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/não/i)).toBeInTheDocument();
   });
 
   it('renders nothing when there are no tokens', () => {

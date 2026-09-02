@@ -1,50 +1,53 @@
 {
-  "model_type": "tfidf+xgboost",
+  "model_type": "fixed_chunks+tfidf+random_forest",
   "target_column": "PGE_ASSUNTOS_REVISADA",
   "label_names": [
-    "ICMS Declarado",
-    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio e sexta-parte - Estatutários - Verbas genéricas",
-    "Cumprimento individual de ação coletiva: 1001391-23.2014.8.26.0053 - Adicional de Local de Exercício ALE",
-    "Cumprimento Individual de Coletiva: 0017872-93.2005.8.26.0053 - Adicionais por Tempo de Serviço sobre vencimentos integrais",
-    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - concessão ou pagamento",
-    "Sistema Remuneratório: Verbas - Licença-prêmio em pecúnia indenizada",
-    "Sistema Remuneratório: Verbas - Gratificação Especial de Suporte à Saúde GESS LC 1.157/11 - Agente de Segurança Penitenciária",
-    "ICMS Autuação",
-    "IPVA",
-    "Detran: Habilitação - Auto de Infração de Trânsito - AIT - Infração meramente administrativa - Sem Processo Administrativo de suspensão ou cassação",
-    "NÃO_NA_TAXONOMIA",
-    "Outros"
+    "Aquisição da Propriedade: Usucapião",
+    "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+    "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+    "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+    "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+    "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+    "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+    "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+    "Imposto de renda: Isenção por Doença Grave",
+    "Residência médica: auxílio moradia",
+    "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+    "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+    "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+    "Terceirizado: Responsabilização subsidiária - Geral"
   ],
-  "top_n": 10,
-  "other_label": "Outros",
-  "nao_taxonomia_label": "NÃO_NA_TAXONOMIA",
-  "n_documents": 117291,
-  "n_train": 31223,
-  "n_test": 23459,
-  "max_per_class": 3000,
-  "n_features": 8000,
+  "n_features": 5000,
+  "chunking": {
+    "strategy": "fixed",
+    "chunk_words": 100,
+    "overlap": 50,
+    "aggregation": "mean"
+  },
+  "preprocess": "raw",
+  "explanation": "tfidf_x_importances",
+  "source_repo": "prointe-insper/juriclass",
+  "notes": "Run do benchmark project1_core do juriclass (fixed_chunks/tfidf/random_forest).",
+  "n_classes": 16,
   "tfidf": {
-    "max_features": 8000,
+    "max_features": 5000,
     "ngram_range": [
       1,
-      2
+      1
     ],
     "min_df": 20,
     "max_df": 0.7,
-    "sublinear_tf": true
+    "sublinear_tf": true,
+    "lowercase": true,
+    "vocabulario": 5000
   },
-  "class_distribution": {
-    "ICMS Declarado": 19436,
-    "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio e sexta-parte - Estatutários - Verbas genéricas": 5260,
-    "Cumprimento individual de ação coletiva: 1001391-23.2014.8.26.0053 - Adicional de Local de Exercício ALE": 4644,
-    "Cumprimento Individual de Coletiva: 0017872-93.2005.8.26.0053 - Adicionais por Tempo de Serviço sobre vencimentos integrais": 4309,
-    "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - concessão ou pagamento": 3549,
-    "Sistema Remuneratório: Verbas - Licença-prêmio em pecúnia indenizada": 2876,
-    "Sistema Remuneratório: Verbas - Gratificação Especial de Suporte à Saúde GESS LC 1.157/11 - Agente de Segurança Penitenciária": 2767,
-    "ICMS Autuação": 2489,
-    "IPVA": 2446,
-    "Detran: Habilitação - Auto de Infração de Trânsito - AIT - Infração meramente administrativa - Sem Processo Administrativo de suspensão ou cassação": 2402,
-    "NÃO_NA_TAXONOMIA": 6399,
-    "Outros": 60714
-  }
+  "classificador": {
+    "tipo": "RandomForestClassifier",
+    "n_estimators": 200,
+    "max_depth": null,
+    "random_state": 42
+  },
+  "metricas": "As metricas comparativas deste modelo estao no benchmark do juriclass (configs/benchmarks/project1_core.toml), nao reproduzidas neste repositorio."
 }

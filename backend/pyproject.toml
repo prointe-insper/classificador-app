@@ -1,6 +1,6 @@
 [project]
 name = "classificador-app-backend"
-version = "0.2.1"
+version = "0.3.0"
 description = "Backend FastAPI do classificador de assuntos jurídicos da PGE-SP"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -12,7 +12,7 @@ dependencies = [
     "pydantic-settings>=2.3",
     "numpy>=1.26",
     "scipy>=1.11",
-    "scikit-learn>=1.4",
+    "scikit-learn>=1.8",
     "xgboost>=2.0",
     "shap>=0.46",
     "numba>=0.60",

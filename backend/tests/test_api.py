@@ -2,6 +2,12 @@
 
 import io
 
+from app.config import Settings
+
+# Id do modelo ativo: lido da configuração para que trocar de modelo não exija
+# reescrever os testes.
+MODEL_ID = Settings().model_id
+
 
 def test_health(client):
     r = client.get("/api/health")
@@ -101,7 +107,7 @@ def test_models_lists_default(client):
     assert r.status_code == 200
     body = r.json()
     assert len(body["models"]) >= 1
-    assert body["default_id"] == "pge-tfidf-xgboost-v1"
+    assert body["default_id"] == MODEL_ID
     ids = [m["id"] for m in body["models"]]
     assert body["default_id"] in ids
     default = next(m for m in body["models"] if m["id"] == body["default_id"])
@@ -112,17 +118,17 @@ def test_models_lists_default(client):
 def test_predict_echoes_model_id(client):
     r = _upload(client, "icms declarado execucao fiscal divida ativa", threshold=0.0)
     assert r.status_code == 200
-    assert r.json()["model_id"] == "pge-tfidf-xgboost-v1"
+    assert r.json()["model_id"] == MODEL_ID
 
 
 def test_predict_accepts_explicit_model_id(client):
     r = client.post(
         "/api/predict",
         files={"file": ("doc.txt", io.BytesIO(b"icms declarado"), "text/plain")},
-        data={"threshold": "0.0", "model_id": "pge-tfidf-xgboost-v1"},
+        data={"threshold": "0.0", "model_id": MODEL_ID},
     )
     assert r.status_code == 200
-    assert r.json()["model_id"] == "pge-tfidf-xgboost-v1"
+    assert r.json()["model_id"] == MODEL_ID
 
 
 def test_predict_rejects_unknown_model_id(client):
@@ -152,7 +158,7 @@ def test_export_xlsx_returns_spreadsheet(client):
                 "source": "pdf",
                 "ocr_used": False,
                 "char_count": 1200,
-                "model_id": "pge-tfidf-xgboost-v1",
+                "model_id": MODEL_ID,
                 "feedback_status": "incorreto",
                 "correct_label": "Servidor",
             },

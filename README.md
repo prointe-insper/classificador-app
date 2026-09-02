@@ -9,8 +9,8 @@ desenvolvido com o **Insper** no âmbito do projeto FAPESP.
 
 O modelo é ajustado à **taxonomia revisada** da PGE (do repositório
 [`classificador-assuntos`](https://github.com/prointe-insper/classificador-assuntos))
-e segue a abordagem `tfidf_xgboost` do pacote
-[juriclass](https://github.com/tiagoft/juriclass).
+e vem do benchmark do [`juriclass`](https://github.com/prointe-insper/juriclass):
+desde a v0.3.0, a configuração `fixed_chunks/tfidf/random_forest`.
 
 > **LGPD:** toda a solução roda **100% local**, sem dependência de nuvem.
 > Não há envio de dados para serviços externos.
@@ -24,10 +24,9 @@ escaneado ou imagem), o sistema:
 
 1. **Extrai o texto** (com OCR automático para PDFs escaneados/imagens);
 2. **Estrutura/limpa** o texto;
-3. **Prediz** o assunto entre os **top-10 rótulos** da taxonomia + `NÃO_NA_TAXONOMIA`
-   (peça fora da taxonomia) + `Outros`;
+3. **Prediz** o assunto entre os **16 rótulos** cobertos pelo modelo atual;
 4. Mostra a **probabilidade de cada rótulo**;
-5. Apresenta a **interpretabilidade** (termos mais influentes na decisão, via TreeSHAP);
+5. Apresenta a **interpretabilidade** (termos mais influentes na decisão);
 6. Aplica um **limiar de corte** configurável: abaixo dele, a peça é marcada
    como **"Revisar manualmente"**.
 
@@ -58,8 +57,8 @@ flowchart LR
     subgraph BE[Backend FastAPI]
         direction TB
         OCR[1. OCR / Extração\ntesseract + poppler] --> PRE[2. Estruturação\npreprocess]
-        PRE --> MODEL[3. Predição\nTF-IDF + XGBoost]
-        MODEL --> EXP[4. Explicabilidade\nTreeSHAP]
+        PRE --> MODEL[3. Predição\nchunks + TF-IDF + Random Forest]
+        MODEL --> EXP[4. Explicabilidade\ntermos influentes]
         EXP --> DEC[5. Decisão por limiar]
     end
     BE -->|JSON: classe, probabilidades,\nexplicação, decisão| FE
@@ -146,75 +145,65 @@ npm run dev        # http://localhost:5173 (proxy /api → :8000)
 
 | Item | Valor |
 | --- | --- |
-| Abordagem | TF-IDF (1–2 gramas) + **XGBoost** (`tree_method=hist`, `multi:softprob`) |
-| Inspiração | `tfidf_xgboost` do [juriclass](https://github.com/tiagoft/juriclass) |
-| Alvo | `PGE_ASSUNTOS_REVISADA` — **top-10** + `NÃO_NA_TAXONOMIA` + `Outros` (12 classes) |
-| Balanceamento | pesos de classe (`class_weight="balanced"`) durante o treino |
-| Explicabilidade | **TreeSHAP** (exato p/ árvores) — mapeia features TF-IDF → termos do documento |
-| Distribuição | `model.joblib` (vectorizer + clf + rótulos + metadados) |
+| Abordagem | *chunks* fixos de 100 palavras (sobreposição 50) → TF-IDF (unigramas, 5.000 features) → média dos vetores → **Random Forest** (200 árvores) |
+| Origem | configuração `fixed_chunks/tfidf/random_forest`, vencedora do benchmark `project1_core` do [juriclass](https://github.com/prointe-insper/juriclass) |
+| Alvo | `PGE_ASSUNTOS_REVISADA` — **16 assuntos** da taxonomia revisada |
+| Explicabilidade | peso TF-IDF do documento × importância global do Random Forest |
+| Distribuição | `model.joblib` (vectorizer + clf + rótulos + metadados) nas *Releases* |
 
-### Por que TF-IDF + XGBoost (e não um transformer)?
+O `metadata` do bundle descreve o pipeline de inferência (`chunking`,
+`preprocess`, `explanation`), e o backend o reproduz a partir dessas chaves. É
+o que garante que a resposta da API seja idêntica à do
+[`juriclass-webapp`](https://github.com/prointe-insper/juriclass-webapp), que
+serve o mesmo modelo.
 
-Por restrição de **LGPD**, não podemos usar nuvem (Colab, APIs). A abordagem
-TF-IDF + XGBoost roda **inteiramente em CPU**, em qualquer máquina, sem GPU,
-mantendo boa acurácia e — graças ao TreeSHAP — **explicabilidade exata e
-instantânea** (ao contrário do LIME, que é amostral e lento). Um caminho com
-SBERT/transformer (também presente no juriclass) fica registrado como evolução
-futura, caso uma GPU local seja disponibilizada.
+> **Atenção à mudança de taxonomia na v0.3.0.** As 16 classes deste modelo são
+> **inteiramente distintas** das 12 da v0.2.x: saíram os assuntos de massa
+> (ICMS Declarado, IPVA, GESS, ALE, ATS) e entrou a cauda longa (Usucapião,
+> IPTU, ITCMD, erro médico, terceirização). Também **não há mais** as classes
+> de escape `Outros` e `NÃO_NA_TAXONOMIA`: toda peça é atribuída a um dos 16
+> assuntos, e o **limiar de corte** passa a ser o único mecanismo que encaminha
+> à revisão humana o que está fora do alcance do modelo. Peças de assunto de
+> massa tendem a sair com confiança baixa, e é assim que devem ser tratadas.
+
+### Por que uma abordagem leve (e não um transformer)?
+
+Por restrição de **LGPD**, não podemos usar nuvem (Colab, APIs). TF-IDF com
+classificador de árvores roda **inteiramente em CPU**, em qualquer máquina, sem
+GPU, e no benchmark do `juriclass` superou tanto os modelos contextuais quanto
+LLMs locais em *few-shot*, com custo de processamento muito menor. Entender
+**por que** isso acontece é objeto de artigo próprio.
 
 ### Resultados esperados
 
 <!-- METRICS:START -->
-Avaliação no **conjunto de teste** (23.459 documentos, mantendo a **distribuição
-real** dos assuntos; treino com 31.223 documentos, subamostrando as classes
-majoritárias). Métricas detalhadas em `backend/model/artifacts/metrics.json`.
+As métricas comparativas do modelo da v0.3.0 são as do benchmark `project1_core`
+do [`juriclass`](https://github.com/prointe-insper/juriclass)
+(`configs/benchmarks/project1_core.toml`), onde essa configuração foi escolhida
+entre as demais. Elas **não são reproduzidas neste repositório**: aqui não está o
+conjunto de avaliação, e publicar número sem o dado que o sustenta seria pior que
+não publicar.
 
-| Métrica global | Valor |
-| --- | --- |
-| **Balanced accuracy** | **0,914** |
-| **Macro F1** | **0,793** |
-| **Accuracy** | **0,808** |
-
-Desempenho por classe (F1 / precisão / recall):
-
-| Classe | F1 | Precisão | Recall | Suporte |
-| --- | ---: | ---: | ---: | ---: |
-| ICMS Declarado | 0,99 | 0,99 | 0,98 | 3.887 |
-| IPVA | 0,98 | 0,98 | 0,99 | 489 |
-| Cumprimento Individual de Coletiva 0017872-93.2005 (ATS) | 0,96 | 0,93 | 0,98 | 862 |
-| Cumprimento individual de coletiva 1001391-23.2014 (ALE) | 0,92 | 0,88 | 0,97 | 929 |
-| ICMS Autuação | 0,89 | 0,82 | 0,97 | 498 |
-| Sistema Remuneratório – Bonificação por Resultados | 0,83 | 0,74 | 0,96 | 710 |
-| Outros | 0,80 | 0,96 | 0,69 | 12.143 |
-| NÃO_NA_TAXONOMIA | 0,71 | 0,61 | 0,84 | 1.280 |
-| Detran – AIT (infração administrativa) | 0,69 | 0,54 | 0,97 | 480 |
-| Sistema Remuneratório – GESS LC 1.157/11 | 0,66 | 0,51 | 0,94 | 554 |
-| Sistema Remuneratório – Recálculo quinquênio/sexta-parte | 0,55 | 0,41 | 0,82 | 1.052 |
-| Sistema Remuneratório – Licença-prêmio em pecúnia | 0,54 | 0,40 | 0,86 | 575 |
-
-**Leitura dos resultados:**
-- Assuntos com vocabulário muito distintivo (ICMS, IPVA, cumprimentos de
-  coletivas identificadas por nº de processo) atingem F1 ≥ 0,92.
-- As subclasses de *Sistema Remuneratório* são as mais confundidas **entre si**
-  (alta recall, menor precisão) — são juridicamente próximas. O **limiar de
-  corte** encaminha esses casos de menor confiança para revisão humana.
-- `Outros` tem **alta precisão (0,96)** e recall menor (0,69): o modelo é
-  conservador antes de descartar uma peça como "cauda longa".
-
-> Treino em **CPU**, 8 núcleos, ~3 min (sem GPU).
+As métricas da v0.2.x (TF-IDF + XGBoost, 12 classes: balanced accuracy 0,914,
+macro F1 0,793 e accuracy 0,808) seguem no histórico do git e valem para aquele
+modelo, não para este.
 <!-- METRICS:END -->
 
-> A classe `Outros` concentra a cauda longa da taxonomia (muitos rótulos raros),
-> por isso é majoritária. O **limiar de corte** existe justamente para encaminhar
-> à revisão humana os casos de baixa confiança, priorizando precisão sobre
-> cobertura quando necessário.
+> Sem as classes de escape `Outros`/`NÃO_NA_TAXONOMIA`, o **limiar de corte** é
+> o único mecanismo que encaminha à revisão humana os casos de baixa confiança,
+> priorizando precisão sobre cobertura.
 
 ### Explicabilidade
 
-Para a classe escolhida, calculamos os **valores SHAP** de cada *feature* TF-IDF
-e destacamos os **termos presentes no documento** com maior contribuição. No
-frontend, eles aparecem como *chips* coloridos (vermelho = empurra para a classe;
-cinza = contra), dimensionados pela magnitude.
+Para o modelo atual, o peso de cada termo é o **peso TF-IDF no documento ×
+importância global do Random Forest**, e destacamos os termos de maior peso. É a
+mesma aproximação do `juriclass-webapp`: mede "o documento tem esse termo"
+combinado com "esse termo importa para o modelo em geral", e **não** a
+contribuição para a classe prevista especificamente. TreeSHAP exato sobre uma
+floresta de 200 árvores e 5.000 features é caro demais para o tempo de resposta
+de um upload; ele continua no código e é usado automaticamente por bundles
+XGBoost (chave `explanation` do `metadata`). No frontend os termos aparecem como
+*chips* coloridos, dimensionados pela magnitude.
 
 ---
 
