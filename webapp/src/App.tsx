@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { CATALOGO, MODELO_PADRAO } from './catalog';
 import { loadModel } from './model/loader';
 import { predict } from './model/predict';
 import type { Prediction, WebModel } from './model/types';
 import { extractText } from './utils/pdf';
 import { expandZip, isZip } from './utils/zip';
 
-const MODEL_URL = `${import.meta.env.BASE_URL}model-web.json`;
 const THRESHOLD_PADRAO = 0.5;
 const REVISAR = 'Revisar manualmente';
 
@@ -45,8 +45,12 @@ function baixarCsv(linhas: Linha[], limiar: number): void {
 }
 
 export function App() {
+  const [modeloId, setModeloId] = useState(MODELO_PADRAO);
   const [model, setModel] = useState<WebModel | null>(null);
   const [carregandoModelo, setCarregandoModelo] = useState(true);
+  // Cada modelo é baixado uma vez e fica em memória: trocar de ida e volta no
+  // seletor não deve rebaixar 1-2 MB a cada troca.
+  const cache = useRef(new Map<string, WebModel>());
   const [erro, setErro] = useState<string | null>(null);
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [rodando, setRodando] = useState(false);
@@ -56,12 +60,42 @@ export function App() {
   const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const escolhido = useMemo(
+    () => CATALOGO.find((m) => m.id === modeloId) ?? CATALOGO[0],
+    [modeloId],
+  );
+
   useEffect(() => {
-    loadModel(MODEL_URL)
-      .then(setModel)
-      .catch((e) => setErro(e instanceof Error ? e.message : String(e)))
-      .finally(() => setCarregandoModelo(false));
-  }, []);
+    let cancelado = false;
+    const guardado = cache.current.get(escolhido.id);
+    if (guardado) {
+      setModel(guardado);
+      setCarregandoModelo(false);
+      return;
+    }
+    setCarregandoModelo(true);
+    setModel(null);
+    loadModel(`${import.meta.env.BASE_URL}${escolhido.arquivo}`, escolhido.id)
+      .then((m) => {
+        cache.current.set(escolhido.id, m);
+        if (!cancelado) {
+          setModel(m);
+        }
+      })
+      .catch((e) => {
+        if (!cancelado) {
+          setErro(e instanceof Error ? e.message : String(e));
+        }
+      })
+      .finally(() => {
+        if (!cancelado) {
+          setCarregandoModelo(false);
+        }
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [escolhido]);
 
   async function classificar(entrada: FileList | null) {
     if (!entrada || !model) {
@@ -129,6 +163,36 @@ export function App() {
         <div className="layout">
           <div className="stack">
             <section className="card">
+              <h2 className="card__title">Modelo de classificação</h2>
+              <div className="model-selector">
+                <label className="model-selector__label" htmlFor="modelo">
+                  Modelo
+                </label>
+                <select
+                  id="modelo"
+                  className="model-selector__select"
+                  data-testid="model-select"
+                  value={modeloId}
+                  disabled={rodando}
+                  onChange={(e) => setModeloId(e.target.value)}
+                >
+                  {CATALOGO.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nome}
+                    </option>
+                  ))}
+                </select>
+                <p className="card__caption">{escolhido.descricao}</p>
+                {model ? (
+                  <p className="card__caption">
+                    {model.labels.length} assuntos ·{' '}
+                    {model.terms.length.toLocaleString('pt-BR')} atributos
+                  </p>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="card">
               <h2 className="card__title">Como esta versão funciona</h2>
               <p className="card__caption">
                 O modelo é baixado uma vez (1,2 MB) e a classificação acontece no seu
@@ -186,9 +250,30 @@ export function App() {
                 <p className="upload__status" role="status">Baixando o modelo...</p>
               ) : null}
               {rodando ? (
-                <p className="upload__status" role="status">
-                  {status ?? `Classificando ${progresso.feitos} de ${progresso.total}...`}
-                </p>
+                <>
+                  <p className="upload__status" role="status">
+                    {status ?? `Classificando ${progresso.feitos} de ${progresso.total}...`}
+                  </p>
+                  <div
+                    className="progress__track upload__progress"
+                    role="progressbar"
+                    aria-label="Progresso da classificação"
+                    aria-valuenow={progresso.feitos}
+                    aria-valuemin={0}
+                    aria-valuemax={progresso.total}
+                  >
+                    <div
+                      className="progress__fill"
+                      style={{
+                        width: `${
+                          progresso.total > 0
+                            ? (progresso.feitos / progresso.total) * 100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </>
               ) : null}
             </section>
 
@@ -287,6 +372,9 @@ export function App() {
           <span>© 2026 PGE-SP · Insper, Classificador de Assuntos Jurídicos</span>
           {model ? (
             <div className="footer__meta">
+              <span>
+                Modelo: <strong>{model.modelType}</strong>
+              </span>
               <span>{model.labels.length} classes</span>
               <span>{model.terms.length.toLocaleString('pt-BR')} atributos</span>
               <span>{model.forest.nTrees} árvores</span>

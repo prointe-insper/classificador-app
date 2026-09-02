@@ -35,8 +35,90 @@ def _b64(array: np.ndarray, dtype: str) -> str:
     return base64.b64encode(np.ascontiguousarray(array, dtype=dtype).tobytes()).decode("ascii")
 
 
+def export_xgboost(clf) -> dict:
+    """Achata o booster do XGBoost em arrays paralelos indexados por nó global.
+
+    Três detalhes do XGBoost que precisam atravessar para o cliente, sob pena de
+    a predição divergir:
+
+    - **Ausência é ``missing``, não zero.** O backend prediz sobre a matriz
+      esparsa do TF-IDF, e o XGBoost trata entrada ausente como valor faltante,
+      seguindo o ramo ``missing`` do nó. Um cliente que montasse um vetor denso
+      com zeros desceria pelo ramo errado na maioria dos nós.
+    - **A comparação é estrita** (``<``), ao contrário do ``<=`` do sklearn.
+    - **``base_score`` é um vetor por classe**, não um escalar. Fosse escalar,
+      cairia fora no softmax; sendo vetor, entra na margem de cada classe.
+
+    A ordem das árvores é ``rodada * n_classes + classe``, então a classe da
+    árvore ``t`` é ``t % n_classes``.
+    """
+    import json
+
+    booster = clf.get_booster()
+    n_classes = int(clf.n_classes_)
+
+    feature: list[int] = []
+    threshold: list[float] = []
+    yes: list[int] = []
+    no: list[int] = []
+    missing: list[int] = []
+    leaf_value: list[float] = []
+    tree_offsets: list[int] = [0]
+
+    for bruto in booster.get_dump(dump_format="json"):
+        raiz = json.loads(bruto)
+        base = len(feature)
+        # O dump é aninhado e os filhos são referenciados por `nodeid`; achata
+        # numa lista indexada por nodeid para converter em índice global.
+        por_id: dict[int, dict] = {}
+
+        def visitar(no_: dict) -> None:
+            por_id[int(no_["nodeid"])] = no_
+            for filho in no_.get("children", []):
+                visitar(filho)
+
+        visitar(raiz)
+        for nodeid in range(max(por_id) + 1):
+            no_ = por_id.get(nodeid)
+            if no_ is None or "leaf" in (no_ or {}):
+                feature.append(-1)
+                threshold.append(0.0)
+                yes.append(-1)
+                no.append(-1)
+                missing.append(-1)
+                leaf_value.append(float(no_["leaf"]) if no_ else 0.0)
+                continue
+            feature.append(int(str(no_["split"]).lstrip("f")))
+            threshold.append(float(no_["split_condition"]))
+            yes.append(base + int(no_["yes"]))
+            no.append(base + int(no_["no"]))
+            missing.append(base + int(no_["missing"]))
+            leaf_value.append(0.0)
+        tree_offsets.append(len(feature))
+
+    config = json.loads(booster.save_config())
+    base_score = json.loads(config["learner"]["learner_model_param"]["base_score"])
+    if not isinstance(base_score, list):
+        base_score = [float(base_score)] * n_classes
+
+    return {
+        "kind": "xgboost",
+        "n_trees": len(tree_offsets) - 1,
+        "n_classes": n_classes,
+        "n_nodes": len(feature),
+        "tree_offsets": _b64(np.array(tree_offsets), "int32"),
+        "feature": _b64(np.array(feature), "int32"),
+        "threshold": _b64(np.array(threshold), "float64"),
+        "yes": _b64(np.array(yes), "int32"),
+        "no": _b64(np.array(no), "int32"),
+        "missing": _b64(np.array(missing), "int32"),
+        "leaf_value": _b64(np.array(leaf_value), "float64"),
+        "base_score": _b64(np.array(base_score), "float64"),
+    }
+
+
 def export_forest(clf) -> dict:
-    """Achata a floresta em arrays paralelos indexados por nó global."""
+    """Achata a floresta do sklearn em arrays paralelos indexados por nó global."""
     feature: list[int] = []
     threshold: list[float] = []
     left: list[int] = []
@@ -66,6 +148,7 @@ def export_forest(clf) -> dict:
         tree_offsets.append(len(feature))
 
     return {
+        "kind": "sklearn_forest",
         "n_trees": len(clf.estimators_),
         "n_classes": int(clf.n_classes_),
         "n_nodes": len(feature),
@@ -88,27 +171,49 @@ def build_payload(bundle: dict) -> dict:
 
     if vec.norm != "l2":
         raise SystemExit(f"norm={vec.norm!r} não suportado no cliente (só l2).")
-    if vec.analyzer != "word" or vec.ngram_range != (1, 1):
-        raise SystemExit("o cliente só implementa analyzer='word' com unigramas.")
+    if vec.analyzer != "word":
+        raise SystemExit("o cliente só implementa analyzer='word'.")
+    if vec.ngram_range[0] != 1 or vec.ngram_range[1] > 2:
+        raise SystemExit(f"ngram_range={vec.ngram_range} fora do que o cliente implementa.")
     if vec.strip_accents is not None:
         raise SystemExit("strip_accents não é replicado no cliente.")
+    if vec.stop_words is not None:
+        raise SystemExit("stop_words do vetorizador não é replicado no cliente.")
+
+    tipo = type(clf).__name__
+    if tipo == "RandomForestClassifier":
+        forest = export_forest(clf)
+    elif tipo == "XGBClassifier":
+        forest = export_xgboost(clf)
+    else:
+        raise SystemExit(f"estimador não suportado no cliente: {tipo}")
 
     return {
-        "format": "classificador-web/1",
+        "format": "classificador-web/2",
         "model_type": meta.get("model_type", ""),
         "labels": list(bundle["label_names"]),
-        "chunking": {
-            "chunk_words": int(chunking.get("chunk_words", 100)),
-            "overlap": int(chunking.get("overlap", 50)),
-        },
+        # Sem a chave `chunking` o documento é vetorizado inteiro, como no
+        # ModelService: é o caso do modelo v1.
+        "chunking": (
+            {
+                "chunk_words": int(chunking.get("chunk_words", 100)),
+                "overlap": int(chunking.get("overlap", 50)),
+            }
+            if chunking
+            else None
+        ),
+        # "raw" entrega o texto cru ao vetorizador; "clean" replica o
+        # clean_for_model do backend (normaliza e minúscula).
+        "preprocess": meta.get("preprocess", "clean"),
         "tfidf": {
             "terms": [str(t) for t in vec.get_feature_names_out()],
             "idf": _b64(vec.idf_, "float64"),
             "sublinear_tf": bool(vec.sublinear_tf),
             "lowercase": bool(vec.lowercase),
+            "ngram_max": int(vec.ngram_range[1]),
             "token_pattern": vec.token_pattern,
         },
-        "forest": export_forest(clf),
+        "forest": forest,
         # Importância global por feature: é o que a explicação multiplica pelo
         # peso TF-IDF do documento, como no backend.
         "feature_importances": _b64(clf.feature_importances_, "float64"),
@@ -131,7 +236,10 @@ def main() -> None:
     tamanho = args.out.stat().st_size / 1024**2
     print(f"Gravado em {args.out} ({tamanho:.2f} MB)")
     print(f"  {len(payload['labels'])} classes | {len(payload['tfidf']['terms'])} termos")
-    print(f"  {forest['n_trees']} árvores | {forest['n_nodes']} nós | {forest['n_leaves']} folhas")
+    resumo = f"  {forest['kind']}: {forest['n_trees']} árvores | {forest['n_nodes']} nós"
+    if "n_leaves" in forest:
+        resumo += f" | {forest['n_leaves']} folhas"
+    print(resumo)
 
 
 if __name__ == "__main__":

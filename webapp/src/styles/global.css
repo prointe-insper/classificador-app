@@ -806,6 +806,10 @@ button {
   font-size: 0.9rem;
 }
 
+.upload__progress {
+  margin-top: var(--space-3);
+}
+
 .progress__track {
   height: 12px;
   background: #eef1f5;

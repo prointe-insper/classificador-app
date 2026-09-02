@@ -1,4 +1,5 @@
-import type { WebModel } from './types';
+import { cleanForModel } from './preprocess';
+import type { SparseDoc, WebModel } from './types';
 
 /**
  * Equivalente ao `token_pattern=r"(?u)\b\w\w+\b"` do scikit-learn.
@@ -14,6 +15,21 @@ const TOKEN_PATTERN = /[\p{L}\p{N}_]{2,}/gu;
 
 export function tokenize(text: string): string[] {
   return text.toLowerCase().match(TOKEN_PATTERN) ?? [];
+}
+
+/**
+ * Unigramas e, quando `ngramMax` é 2, também os bigramas, como o
+ * `_word_ngrams` do sklearn: bigramas são pares adjacentes unidos por espaço.
+ */
+export function ngrams(tokens: string[], ngramMax: number): string[] {
+  if (ngramMax < 2) {
+    return tokens;
+  }
+  const saida = [...tokens];
+  for (let i = 0; i + 1 < tokens.length; i += 1) {
+    saida.push(`${tokens[i]} ${tokens[i + 1]}`);
+  }
+  return saida;
 }
 
 /**
@@ -38,49 +54,56 @@ export function chunkText(text: string, chunkSize: number, overlap: number): str
 }
 
 /**
- * Vetor TF-IDF de um chunk, na convenção do sklearn: tf sublinear (1 + ln tf),
- * multiplicado pelo idf e normalizado em L2. Escreve direto em `out`.
+ * Vetor TF-IDF de um trecho, na convenção do sklearn: tf sublinear
+ * (1 + ln tf), multiplicado pelo idf e normalizado em L2.
  */
-function vectorizeChunk(chunk: string, model: WebModel, out: Float64Array): void {
-  out.fill(0);
+function vectorize(trecho: string, model: WebModel): SparseDoc {
   const counts = new Map<number, number>();
-  for (const token of tokenize(chunk)) {
-    const index = model.vocabulary.get(token);
+  for (const termo of ngrams(tokenize(trecho), model.ngramMax)) {
+    const index = model.vocabulary.get(termo);
     if (index !== undefined) {
       counts.set(index, (counts.get(index) ?? 0) + 1);
     }
   }
+  const vetor: SparseDoc = new Map();
   let quadrado = 0;
   for (const [index, count] of counts) {
     const tf = model.sublinearTf ? 1 + Math.log(count) : count;
     const valor = tf * model.idf[index];
-    out[index] = valor;
+    vetor.set(index, valor);
     quadrado += valor * valor;
   }
   if (quadrado > 0) {
     const norma = Math.sqrt(quadrado);
-    for (const index of counts.keys()) {
-      out[index] /= norma;
+    for (const [index, valor] of vetor) {
+      vetor.set(index, valor / norma);
     }
   }
+  return vetor;
 }
 
 /**
- * Representação do documento: média dos vetores TF-IDF dos chunks, que é como
- * o juriclass treinou o modelo.
+ * Representação do documento.
+ *
+ * Com `chunking`, é a média dos vetores TF-IDF dos chunks, que é como o
+ * juriclass treinou o modelo v2. Sem `chunking`, é o documento inteiro
+ * vetorizado de uma vez, como o modelo v1.
  */
-export function documentVector(text: string, model: WebModel): Float64Array {
-  const chunks = chunkText(text, model.chunkWords, model.overlap);
-  const total = new Float64Array(model.terms.length);
-  const atual = new Float64Array(model.terms.length);
+export function documentVector(text: string, model: WebModel): SparseDoc {
+  const preparado = model.preprocess === 'raw' ? text : cleanForModel(text);
+  if (!model.chunking) {
+    return vectorize(preparado, model);
+  }
+
+  const chunks = chunkText(preparado, model.chunking.chunkWords, model.chunking.overlap);
+  const total: SparseDoc = new Map();
   for (const chunk of chunks) {
-    vectorizeChunk(chunk, model, atual);
-    for (let i = 0; i < total.length; i += 1) {
-      total[i] += atual[i];
+    for (const [index, valor] of vectorize(chunk, model)) {
+      total.set(index, (total.get(index) ?? 0) + valor);
     }
   }
-  for (let i = 0; i < total.length; i += 1) {
-    total[i] /= chunks.length;
+  for (const [index, valor] of total) {
+    total.set(index, valor / chunks.length);
   }
   return total;
 }

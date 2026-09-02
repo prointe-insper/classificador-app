@@ -1,8 +1,13 @@
 # Classificador no navegador (versão experimental)
 
 Versão do classificador que roda **inteira no navegador**, sem backend, sem
-Docker e sem upload. O modelo é baixado uma vez (1,2 MB) e a inferência acontece
-na máquina de quem abre a página.
+Docker e sem upload. O modelo escolhido é baixado uma vez (1,2 MB o v2, 2,2 MB o
+v1) e a inferência acontece na máquina de quem abre a página.
+
+Serve os **dois modelos** do catálogo, com os mesmos ids do app principal: o v2
+(16 assuntos da cauda, chunks + TF-IDF + Random Forest) e o v1 (dez assuntos de
+massa mais `Outros`, TF-IDF 1-2 gramas + XGBoost). Cada um é baixado sob demanda
+e fica em memória.
 
 Publicada em: <https://prointe-insper.github.io/classificador-app/>
 
@@ -41,29 +46,43 @@ O pipeline é o mesmo do backend, reimplementado em TypeScript:
    soltas vão direto para o OCR.
 2. `model/tfidf.ts` quebra o texto em chunks de 100 palavras com sobreposição
    de 50, vetoriza cada chunk em TF-IDF e tira a média dos vetores.
-3. `model/forest.ts` percorre as 200 árvores e faz a média das distribuições.
+3. `model/forest.ts` percorre as árvores do Random Forest e faz a média das
+   distribuições; `model/xgboost.ts` percorre o booster do XGBoost, soma as
+   margens por classe e aplica softmax.
 4. `model/predict.ts` monta a explicação (peso TF-IDF × importância global).
 
 O modelo vem de `backend/model/export_web.py`, que traduz o bundle do
 scikit-learn em arrays tipados dentro de um JSON.
 
-### O detalhe que mais dá errado
+### Os detalhes que mais dão errado
 
-O `token_pattern` do scikit-learn é `(?u)\b\w\w+\b`, e o `\w` do Python com
-`re.UNICODE` cobre letras acentuadas. O `\w` do JavaScript é ASCII mesmo com a
-flag `u`: usá-lo quebraria "execução" em "execu" e "o", e o vetor não bateria
-com o do treino. Por isso o tokenizador usa `[\p{L}\p{N}_]{2,}`.
+**Tokenização.** O `token_pattern` do scikit-learn usa o `\w` do Python com
+`re.UNICODE`, que cobre letras acentuadas. O `\w` do JavaScript é ASCII mesmo
+com a flag `u`: usá-lo quebraria "execução" em "execu" e "o", e o vetor não
+bateria com o do treino. Por isso o tokenizador usa classes unicode explícitas
+(ver `model/tfidf.ts`).
+
+**Ausente não é zero no XGBoost.** O backend prediz sobre a matriz esparsa do
+TF-IDF, e o XGBoost trata entrada ausente como valor faltante, seguindo o ramo
+`missing` do nó. Por isso o documento trafega como mapa esparso, e não como
+vetor denso: um vetor de zeros desceria pelo ramo errado na maioria dos nós e
+daria outra classe. O Random Forest, ao contrário, lê ausente como zero.
 
 ## Paridade com o backend
 
-`src/model/predict.test.ts` compara a saída do TypeScript com a do backend em
-casos gravados (`src/model/__fixtures__/backend-outputs.json`, textos sintéticos,
-sem dado de processo real). Classe, as 16 probabilidades e os 12 termos
-destacados batem até a 12ª casa decimal.
+`src/model/predict.test.ts` compara a saída do TypeScript com a do backend nos
+dois modelos, em casos gravados (`src/model/__fixtures__/backend-outputs.json`,
+textos sintéticos, sem dado de processo real): classe prevista, todas as
+probabilidades e os 12 termos destacados.
 
-A mesma comparação foi rodada localmente contra 100 petições reais: classe
-idêntica em 100/100, termos idênticos em 100/100 e diferença máxima de
-probabilidade abaixo de 1e-12. Esses arquivos não entram no repositório.
+A mesma comparação foi rodada localmente contra 80 petições reais, nos dois
+modelos: classe idêntica em 80/80 para ambos, com diferença máxima de
+probabilidade de 0 no v2 e 2,1e-7 no v1. Esses arquivos não entram no
+repositório.
+
+A diferença do v1 é esperada e não some: o XGBoost calcula em float32 do começo
+ao fim (folhas, soma das margens e o softmax) e o JavaScript não tem aritmética
+de 32 bits. 1e-7 é o épsilon do float32.
 
 ```bash
 npm install
@@ -90,12 +109,6 @@ uv run python -m model.export_web --out ../webapp/public/model-web.json
 
 Comparada ao app principal (Docker), esta versão **não tem**:
 
-- **Seletor de modelo.** Serve um modelo só, o da v0.3.0. Não é uma perda em
-  relação ao app principal: lá o seletor existe na tela mas também tem uma
-  opção só, e fica desabilitado. Servir dois modelos aqui seria até mais fácil
-  (é outro JSON), mas o modelo antigo é XGBoost, cuja árvore tem estrutura e
-  agregação diferentes das do Random Forest; `forest.ts` teria que ganhar um
-  segundo interpretador.
 - **Marcação de correto/incorreto na tabela.** As colunas de revisão e o campo
   de rótulo correto existem só no app principal. Sem elas, esta versão não
   serve para coletar o gabarito humano do experimento.
@@ -118,6 +131,11 @@ E tem estas restrições próprias:
 - **Depende de navegador atual.** Usa WebAssembly e `File.stream()`; Chrome,
   Edge ou Firefox recentes. Não foi testada em navegador antigo de rede
   corporativa, que é justamente o cenário da PGE-SP.
+- **PDF pode dar resultado ligeiramente diferente do app principal.** A
+  classificação é a mesma para um mesmo texto, mas o texto sai de extratores
+  diferentes: aqui é o `pdf.js`, lá é o `pdfplumber`. Para `.txt` os dois
+  chegam ao mesmo resultado; para PDF a confiança pode variar na casa decimal, e
+  um PDF que aqui cai no OCR pode ter camada de texto aproveitável lá.
 
 ## Aviso
 

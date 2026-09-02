@@ -1,11 +1,12 @@
 import { predictProba } from './forest';
 import { documentVector } from './tfidf';
 import type { Prediction, WebModel } from './types';
+import { predictProbaXgb } from './xgboost';
 
 /**
- * Conectivos que o TF-IDF do juriclass não remove (ele filtra por frequência,
- * não por stopword) e que dominariam o destaque num documento real. Mesma lista
- * do backend e do juriclass-webapp, para que os termos destacados coincidam.
+ * Conectivos que o TF-IDF não remove (ele filtra por frequência, não por
+ * stopword) e que dominariam o destaque num documento real. Mesma lista do
+ * backend e do juriclass-webapp, para que os termos destacados coincidam.
  */
 const STOPWORDS = new Set(
   ('a à às ao aos aquela aquelas aquele aqueles aquilo as até com como da das de dela ' +
@@ -16,9 +17,17 @@ const STOPWORDS = new Set(
     'sua suas também te tu tua tuas um uma você vocês vos').split(' '),
 );
 
+/** Um termo é descartado da explicação se ele todo for stopword. */
+function ehStopword(termo: string): boolean {
+  return termo.split(' ').every((parte) => STOPWORDS.has(parte));
+}
+
 export function predict(text: string, model: WebModel, topK = 12): Prediction {
   const x = documentVector(text, model);
-  const proba = predictProba(model.forest, x);
+  const proba =
+    model.forest.kind === 'xgboost'
+      ? predictProbaXgb(model.forest, x)
+      : predictProba(model.forest, x);
 
   let melhor = 0;
   for (let i = 1; i < proba.length; i += 1) {
@@ -31,18 +40,27 @@ export function predict(text: string, model: WebModel, topK = 12): Prediction {
     .map((label, i) => ({ label, probability: proba[i] }))
     .sort((a, b) => b.probability - a.probability);
 
-  // Peso TF-IDF do documento x importância global da floresta, a mesma
-  // aproximação do backend: mede influência, não direção a favor da classe.
+  // Peso TF-IDF do documento x importância global do estimador. É a mesma
+  // aproximação que o backend usa para o Random Forest. Para o modelo v1 o
+  // backend usa TreeSHAP, que é exato e com sinal; aqui a explicação do v1 é
+  // esta aproximação, e a interface diz isso.
+  // Percorre em ordem crescente de índice, e não na ordem de inserção do mapa:
+  // o backend monta a lista iterando as colunas não nulas em ordem, e tanto o
+  // sort do Python quanto o do JavaScript são estáveis. Sem isso, termos de
+  // peso empatado sairiam em ordem diferente da do backend.
+  const entradas = [...x.entries()].sort((a, b) => a[0] - b[0]);
   const pesos: { token: string; weight: number }[] = [];
-  for (let i = 0; i < x.length; i += 1) {
-    if (x[i] > 0) {
-      const token = model.terms[i];
-      if (!STOPWORDS.has(token)) {
-        const weight = x[i] * model.featureImportances[i];
-        if (weight > 0) {
-          pesos.push({ token, weight });
-        }
-      }
+  for (const [index, valor] of entradas) {
+    if (valor <= 0) {
+      continue;
+    }
+    const token = model.terms[index];
+    if (ehStopword(token)) {
+      continue;
+    }
+    const weight = valor * model.featureImportances[index];
+    if (weight > 0) {
+      pesos.push({ token, weight });
     }
   }
   pesos.sort((a, b) => b.weight - a.weight);
