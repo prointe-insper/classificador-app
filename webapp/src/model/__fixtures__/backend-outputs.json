@@ -1,0 +1,531 @@
+[
+  {
+    "nome": "usucapiao",
+    "texto": "Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. Trata-se de ação de usucapião extraordinária proposta em face da Fazenda Pública do Estado de São Paulo. O autor exerce posse mansa, pacífica e ininterrupta do imóvel urbano há mais de quinze anos, com animus domini, sem oposição de quem quer que seja, requerendo o reconhecimento da aquisição da propriedade e o respectivo registro imobiliário na matrícula. ",
+    "label": "Aquisição da Propriedade: Usucapião",
+    "confidence": 0.57,
+    "probabilities": [
+      {
+        "label": "Aquisição da Propriedade: Usucapião",
+        "probability": 0.57
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+        "probability": 0.175
+      },
+      {
+        "label": "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+        "probability": 0.095
+      },
+      {
+        "label": "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+        "probability": 0.035
+      },
+      {
+        "label": "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+        "probability": 0.03
+      },
+      {
+        "label": "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+        "probability": 0.03
+      },
+      {
+        "label": "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+        "probability": 0.02
+      },
+      {
+        "label": "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+        "probability": 0.02
+      },
+      {
+        "label": "Residência médica: auxílio moradia",
+        "probability": 0.01
+      },
+      {
+        "label": "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+        "probability": 0.005
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+        "probability": 0.005
+      },
+      {
+        "label": "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+        "probability": 0.005
+      },
+      {
+        "label": "Imposto de renda: Isenção por Doença Grave",
+        "probability": 0.0
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+        "probability": 0.0
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+        "probability": 0.0
+      },
+      {
+        "label": "Terceirizado: Responsabilização subsidiária - Geral",
+        "probability": 0.0
+      }
+    ],
+    "explanation": [
+      {
+        "token": "mansa",
+        "weight": 0.001131986004923243
+      },
+      {
+        "token": "animus",
+        "weight": 0.0006972112162656086
+      },
+      {
+        "token": "imóvel",
+        "weight": 0.0006103940127252034
+      },
+      {
+        "token": "usucapião",
+        "weight": 0.000558675098310149
+      },
+      {
+        "token": "domini",
+        "weight": 0.0005283534027356448
+      },
+      {
+        "token": "posse",
+        "weight": 0.0004443190297062303
+      },
+      {
+        "token": "oposição",
+        "weight": 0.0004174617438568142
+      },
+      {
+        "token": "aquisição",
+        "weight": 0.00026918138596325665
+      },
+      {
+        "token": "ininterrupta",
+        "weight": 0.00026171336023046526
+      },
+      {
+        "token": "seja",
+        "weight": 0.00023551856960800477
+      },
+      {
+        "token": "matrícula",
+        "weight": 0.00023233850543177183
+      },
+      {
+        "token": "fazenda",
+        "weight": 0.00016508075329119994
+      }
+    ]
+  },
+  {
+    "nome": "iptu",
+    "texto": "Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. Execução fiscal para cobrança de IPTU imposto predial e territorial urbano inscrito em dívida ativa do município. Requer a citação do devedor para pagamento do débito atualizado, acrescido de juros, multa e custas processuais, sob pena de penhora de bens suficientes à satisfação do crédito. ",
+    "label": "Aquisição da Propriedade: Usucapião",
+    "confidence": 0.275,
+    "probabilities": [
+      {
+        "label": "Aquisição da Propriedade: Usucapião",
+        "probability": 0.275
+      },
+      {
+        "label": "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+        "probability": 0.185
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+        "probability": 0.18
+      },
+      {
+        "label": "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+        "probability": 0.16
+      },
+      {
+        "label": "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+        "probability": 0.075
+      },
+      {
+        "label": "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+        "probability": 0.04
+      },
+      {
+        "label": "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+        "probability": 0.025
+      },
+      {
+        "label": "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+        "probability": 0.015
+      },
+      {
+        "label": "Residência médica: auxílio moradia",
+        "probability": 0.015
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+        "probability": 0.015
+      },
+      {
+        "label": "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+        "probability": 0.005
+      },
+      {
+        "label": "Imposto de renda: Isenção por Doença Grave",
+        "probability": 0.005
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+        "probability": 0.005
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+        "probability": 0.0
+      },
+      {
+        "label": "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+        "probability": 0.0
+      },
+      {
+        "label": "Terceirizado: Responsabilização subsidiária - Geral",
+        "probability": 0.0
+      }
+    ],
+    "explanation": [
+      {
+        "token": "devedor",
+        "weight": 0.00046866814262142085
+      },
+      {
+        "token": "custas",
+        "weight": 0.00044297417217166804
+      },
+      {
+        "token": "atualizado",
+        "weight": 0.00042692192305975306
+      },
+      {
+        "token": "imposto",
+        "weight": 0.0003606006504503962
+      },
+      {
+        "token": "iptu",
+        "weight": 0.0002929455999449149
+      },
+      {
+        "token": "crédito",
+        "weight": 0.00026714586059249824
+      },
+      {
+        "token": "dívida",
+        "weight": 0.0002153980673678711
+      },
+      {
+        "token": "juros",
+        "weight": 0.00021021969757971466
+      },
+      {
+        "token": "urbano",
+        "weight": 0.00018434569840195268
+      },
+      {
+        "token": "execução",
+        "weight": 0.00018185655939382384
+      },
+      {
+        "token": "município",
+        "weight": 0.0001757416391426345
+      },
+      {
+        "token": "débito",
+        "weight": 0.00017515527910576422
+      }
+    ]
+  },
+  {
+    "nome": "erro_medico",
+    "texto": "Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. Ação de indenização por danos morais e materiais decorrentes de erro médico praticado em hospital da rede pública estadual. Sustenta o autor que houve falha na prestação do serviço de saúde, com responsabilidade civil objetiva do Estado pela ação ou omissão estatal de seus agentes durante o atendimento. ",
+    "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+    "confidence": 0.35,
+    "probabilities": [
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+        "probability": 0.35
+      },
+      {
+        "label": "Aquisição da Propriedade: Usucapião",
+        "probability": 0.225
+      },
+      {
+        "label": "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+        "probability": 0.13
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+        "probability": 0.085
+      },
+      {
+        "label": "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+        "probability": 0.04
+      },
+      {
+        "label": "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+        "probability": 0.035
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+        "probability": 0.035
+      },
+      {
+        "label": "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+        "probability": 0.03
+      },
+      {
+        "label": "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+        "probability": 0.03
+      },
+      {
+        "label": "Residência médica: auxílio moradia",
+        "probability": 0.025
+      },
+      {
+        "label": "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+        "probability": 0.005
+      },
+      {
+        "label": "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+        "probability": 0.005
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+        "probability": 0.005
+      },
+      {
+        "label": "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+        "probability": 0.0
+      },
+      {
+        "label": "Imposto de renda: Isenção por Doença Grave",
+        "probability": 0.0
+      },
+      {
+        "label": "Terceirizado: Responsabilização subsidiária - Geral",
+        "probability": 0.0
+      }
+    ],
+    "explanation": [
+      {
+        "token": "médico",
+        "weight": 0.0002555839540736157
+      },
+      {
+        "token": "danos",
+        "weight": 0.0002433890700249768
+      },
+      {
+        "token": "rede",
+        "weight": 0.00023926202349628897
+      },
+      {
+        "token": "indenização",
+        "weight": 0.00023287089595439988
+      },
+      {
+        "token": "responsabilidade",
+        "weight": 0.0002065305470274754
+      },
+      {
+        "token": "durante",
+        "weight": 0.0001920673971410768
+      },
+      {
+        "token": "hospital",
+        "weight": 0.00015751278232870532
+      },
+      {
+        "token": "estadual",
+        "weight": 0.00015597513569154812
+      },
+      {
+        "token": "objetiva",
+        "weight": 0.00014991036926147974
+      },
+      {
+        "token": "morais",
+        "weight": 0.00012023453691320717
+      },
+      {
+        "token": "civil",
+        "weight": 0.00011648597921538745
+      },
+      {
+        "token": "materiais",
+        "weight": 0.00011157515156624892
+      }
+    ]
+  },
+  {
+    "nome": "curto",
+    "texto": "Petição inicial breve requerendo tutela de urgência.",
+    "label": "Aquisição da Propriedade: Usucapião",
+    "confidence": 0.375,
+    "probabilities": [
+      {
+        "label": "Aquisição da Propriedade: Usucapião",
+        "probability": 0.375
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+        "probability": 0.25
+      },
+      {
+        "label": "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+        "probability": 0.235
+      },
+      {
+        "label": "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+        "probability": 0.03
+      },
+      {
+        "label": "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+        "probability": 0.03
+      },
+      {
+        "label": "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+        "probability": 0.015
+      },
+      {
+        "label": "Residência médica: auxílio moradia",
+        "probability": 0.015
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+        "probability": 0.015
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+        "probability": 0.01
+      },
+      {
+        "label": "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+        "probability": 0.01
+      },
+      {
+        "label": "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+        "probability": 0.005
+      },
+      {
+        "label": "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+        "probability": 0.005
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+        "probability": 0.005
+      },
+      {
+        "label": "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+        "probability": 0.0
+      },
+      {
+        "label": "Imposto de renda: Isenção por Doença Grave",
+        "probability": 0.0
+      },
+      {
+        "label": "Terceirizado: Responsabilização subsidiária - Geral",
+        "probability": 0.0
+      }
+    ],
+    "explanation": [
+      {
+        "token": "tutela",
+        "weight": 0.000309188865841372
+      },
+      {
+        "token": "urgência",
+        "weight": 0.0002865387487128879
+      },
+      {
+        "token": "inicial",
+        "weight": 0.00027931406991712983
+      },
+      {
+        "token": "petição",
+        "weight": 2.9524330858551498e-05
+      }
+    ]
+  },
+  {
+    "nome": "vazio",
+    "texto": "",
+    "label": "Aquisição da Propriedade: Usucapião",
+    "confidence": 0.415,
+    "probabilities": [
+      {
+        "label": "Aquisição da Propriedade: Usucapião",
+        "probability": 0.415
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Outros",
+        "probability": 0.25
+      },
+      {
+        "label": "Controle de Políticas Públicas: Professor Auxiliar e/ou Especializado",
+        "probability": 0.22
+      },
+      {
+        "label": "Execução Municipal: IPTU Imposto Predial e Territorial Urbano",
+        "probability": 0.03
+      },
+      {
+        "label": "IPVA: Alienação ou venda - Ausência de comunicação de venda",
+        "probability": 0.02
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Descontos - CBPM Cruz Azul 070018 - Cessação",
+        "probability": 0.015
+      },
+      {
+        "label": "IPVA: Perda da propriedade - Veículo furtado, roubado, sinistrado - Apreendido - Perdimento para a União - Não incidência",
+        "probability": 0.01
+      },
+      {
+        "label": "ITCMD: Base de cálculo - IPTU x ITBI - Valor de Referência",
+        "probability": 0.01
+      },
+      {
+        "label": "Residência médica: auxílio moradia",
+        "probability": 0.01
+      },
+      {
+        "label": "Responsabilidade Civil: Ação ou omissão estatal - Erro Médico",
+        "probability": 0.01
+      },
+      {
+        "label": "Sistema Remuneratório: Verbas - Bonificação - Participação por Resultados - Inclusão em outras verbas",
+        "probability": 0.01
+      },
+      {
+        "label": "Contagem de tempo de serviço: LC 173/20 - adicionais temporais e/ou licença prêmio",
+        "probability": 0.0
+      },
+      {
+        "label": "Imposto de Renda: Rendimentos Recebidos Acumuladamente RRA - Bonificação por Resultado",
+        "probability": 0.0
+      },
+      {
+        "label": "Imposto de renda: Isenção por Doença Grave",
+        "probability": 0.0
+      },
+      {
+        "label": "Sistema Remuneratório: Repetitivo - Verbas - Recálculo do quinquênio - Piso Salarial Docente",
+        "probability": 0.0
+      },
+      {
+        "label": "Terceirizado: Responsabilização subsidiária - Geral",
+        "probability": 0.0
+      }
+    ],
+    "explanation": []
+  }
+]

@@ -43,3 +43,4 @@ contexto/
 
 # Minutas de e-mail para a PGE (contem enderecos e dados de contato): nunca versionar
 email.md
+webapp/dist/
